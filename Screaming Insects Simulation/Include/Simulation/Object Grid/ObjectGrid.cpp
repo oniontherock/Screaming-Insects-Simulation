@@ -7,6 +7,9 @@ void Cell::setType(TargetType type, bool state) {
 bool Cell::hasType(TargetType type) {
 	return typesUSet[type];
 }
+void Cell::clearTypes() {
+	typesUSet.reset();
+}
 
 
 CellGrid ObjectGrid::cellGrid;

@@ -17,6 +17,8 @@ public:
 	void setType(TargetType type, bool state);
 	// check if the typesUSet has the type
 	bool hasType(TargetType type);
+	// clears the typesUSet
+	void clearTypes();
 };
 
 using Cells1D = std::vector<Cell>;
