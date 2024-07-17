@@ -20,7 +20,7 @@
 
 #include "ECS.hpp"
 #include "SFML/Graphics.hpp"
-#include "../Include/TargetTypes.hpp"
+#include "../Include/Simulation/TargetTypes.hpp"
 #include <functional>
 
 namespace ECSRegistry {

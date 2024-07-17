@@ -126,11 +126,13 @@
     <ClInclude Include="ACECS\ACECS.hpp" />
     <ClInclude Include="ACECS\ECSRegistry.hpp" />
     <ClInclude Include="ACECS\GameLevel.hpp" />
-    <ClInclude Include="Include\Math.hpp" />
-    <ClInclude Include="Include\TargetTypes.hpp" />
+    <ClInclude Include="Include\Common\Math.hpp" />
+    <ClInclude Include="Include\Simulation\Object Grid\ObjectGrid.hpp" />
+    <ClInclude Include="Include\Simulation\TargetTypes.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Include\NumberGenerator.hpp" />
+    <ClCompile Include="Include\Common\NumberGenerator.hpp" />
+    <ClCompile Include="Include\Simulation\Object Grid\ObjectGrid.cpp" />
     <ClCompile Include="Source\main.cpp">
       <SubType>
       </SubType>

@@ -97,7 +97,7 @@ using namespace EntityEvents;
 
 // if you need to include a certain file for a system, include it here.
 #include <iostream>
-#include "../Include/Math.hpp"
+#include "../Include/Common/Math.hpp"
 
 // if the system is not using the entity parameter, remove it's name to avoid a C4100 error
 

@@ -7,6 +7,7 @@
 enum TargetType : uint8_t {
 	Home,
 	Food,
+	TypesCount // amount of types in the TargetType enum, not actually a TargetType
 };
 // amount of steps to a certain target
 typedef uint16_t Steps;

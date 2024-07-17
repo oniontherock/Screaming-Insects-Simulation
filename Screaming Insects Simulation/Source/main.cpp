@@ -1,5 +1,5 @@
 ﻿#include "../ACECS/ACECS.hpp"
-#include "../Include/NumberGenerator.hpp"
+#include "../Include/Common/NumberGenerator.hpp"
 
 int main() {
 	
