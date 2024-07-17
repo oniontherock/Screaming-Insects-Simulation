@@ -1,18 +1,32 @@
 #include "ACECS.hpp"
 
-
 void Engine::inputsRegister() {
-	InputInterface::inputRegister("Example Input", KeySet{ KeyEvent("Escape", Pressed) });
+	InputInterface::inputRegister("Pause", KeySet{ KeyEvent("Escape", Pressed) });
 }
 
 // game states are registered here
 void Engine::panelsRegister() {
 	using namespace PanelManager;
-	panelAdd("Example View",
+	panelAdd("Game View",
 		PanelRect(0, 0, 1280, 720), // screen coordinates
-		PanelRect(0, 0, 640, 360), // world coordinates
+		PanelRect(0, 0, 1280, 720), // world coordinates
 		sf::Color::Black,
 		PANEL_DRAW_FUNCTION{
+			GameLevel * gameLevel = static_cast<GameLevel*>(WorldGrid::levelGet(0, 0, 0));
+			
+			for (EntityId i = 0; i < gameLevel->entities.size(); i++) {
+				Entity& entity = EntityManager::entitiesVector[i];
+
+				auto* entityPositionComponent = entity.entityComponentGet<EntityComponents::ComponentPosition>();
+
+				if (entityPositionComponent) {
+					sf::CircleShape circle(2);
+
+					circle.setPosition(entityPositionComponent->x, entityPositionComponent->y);
+
+					panel.objectDraw(circle);
+				}
+			}
 		}
 	);
 }
@@ -20,18 +34,18 @@ void Engine::panelsRegister() {
 // game states are registered here
 void Engine::gameStateRegister() {
 
-	GameStateHandler::gameStateForceSet("Example State");
+	GameStateHandler::gameStateForceSet("Play");
 
-	GameStateHandler::gameStateAdd("Example State",
+	GameStateHandler::gameStateAdd("Play",
 		/// transitions
 		// vector of GameStateTransitions, and their inputs
 		{
-			GameStateTransition("Other Example State", // name of the state to transition to
+			GameStateTransition("Pause", // name of the state to transition to
 				/// transition inputs
 				// vector of inputs that trigger this transition
 				// note the commas after an input name, without commas every name will become a single string
 				{
-					"Example Input",
+					"Pause",
 				}
 			)
 		},
@@ -39,25 +53,45 @@ void Engine::gameStateRegister() {
 		// the panels belonging to this GameState,
 		// note the commas after every panel name, without commas every name will become a single string
 		{
-			"Example View",
+			"Game View",
 		},
 
 		/// update function
 		// update function for this GameState, called every frame
 		GAME_STATE_FUNCTION{
+
+			GameLevel* gameLevel = static_cast<GameLevel*>(WorldGrid::levelGet(0, 0, 0));
+
+			if (gameLevel->firstRun) {
+				gameLevel->firstRun = false;
+
+				for (uint16_t i = 0; i < 1000; i++) {
+					EntityId entityId = EntityManager::entityCreate(0, 0, 0, EntityUpdateType::Frame);
+					ComponentTemplateManager::componentTemplateApply("Insect", entityId);
+					
+					Entity& entityInstance = EntityManager::entitiesVector[entityId];
+
+					auto* entityPositionComponent = entityInstance.entityComponentGet<EntityComponents::ComponentPosition>();
+					entityPositionComponent->x = 640;
+					entityPositionComponent->y = 360;
+
+					entityInstance.entityComponentGet<EntityComponents::ComponentRotation>()->rotation = RNGf::getFullRange(float(M_PI));
+				}
+			}
+
 			LevelUpdater::levelsUpdate();
 		}
 	);
-	GameStateHandler::gameStateAdd("Other Example State",
+	GameStateHandler::gameStateAdd("Pause",
 		/// transitions
 		// vector of GameStateTransitions, and their inputs
 		{
-			GameStateTransition("Example State", // name of the state to transition to
+			GameStateTransition("Play", // name of the state to transition to
 				/// transition inputs
 				// vector of inputs that trigger this transition
 				// note the commas after an input name, without commas every name will become a single string
 				{
-					"Example Input",
+					"Pause",
 				}
 			)
 		},
@@ -65,7 +99,7 @@ void Engine::gameStateRegister() {
 		// the panels belonging to this GameState,
 		// note the commas after every panel name, without commas every name will become a single string
 		{
-			"Example View",
+			"Game View",
 		},
 
 		/// update function
@@ -80,7 +114,10 @@ void Engine::gameStateRegister() {
 // initialize the ACECS engine by registering all inputs, initializing the ECS module, and registering game states.
 // of course, certain modules do not have to be initialized if the user does not want them to be
 void Engine::engineInitialize() {
-	WorldGrid::levelGridInitialize(5, 5, 5);
+	WorldGrid::levelGridInitialize(1, 1, 1);
+	WorldGrid::levelAdd(new GameLevel(0, 0, 0));
+	WorldGrid::levelActivate(0, 0, 0);
+
 	inputsRegister();
 	ECSRegistry::ECSInitialize();
 	panelsRegister();

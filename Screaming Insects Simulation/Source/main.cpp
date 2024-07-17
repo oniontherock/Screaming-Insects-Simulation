@@ -1,8 +1,13 @@
-﻿#include "ACECS/ACECS.hpp"
+﻿#include "../ACECS/ACECS.hpp"
+#include "../Include/NumberGenerator.hpp"
 
 int main() {
+	
+	RNGf::initialize();
+
 	// setup window
 	sf::RenderWindow window(sf::VideoMode(1280, 720), "Window");
+	window.setFramerateLimit(60);
 
 	Engine::engineInitialize();
 
@@ -14,7 +19,6 @@ int main() {
 
 		window.clear(sf::Color::Black);
 
-		// test
 		Engine::engineDraw(window);
 
 		window.display();

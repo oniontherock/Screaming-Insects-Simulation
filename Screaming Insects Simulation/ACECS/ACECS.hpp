@@ -1,12 +1,16 @@
 #ifndef __ACECS_H__
 #define __ACECS_H__
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #include "Input.hpp"
 #include "GameState.hpp"
 #include "Graphics.hpp"
 #include "World.hpp"
 #include "ECSRegistry.hpp"
 #include "GameLevel.hpp"
+#include "../Include/NumberGenerator.hpp"
 
 #define GAME_STATE_FUNCTION []()
 #define PANEL_DRAW_FUNCTION [](Panel& panel)

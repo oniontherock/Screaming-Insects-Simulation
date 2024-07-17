@@ -126,9 +126,12 @@
     <ClInclude Include="ACECS\ACECS.hpp" />
     <ClInclude Include="ACECS\ECSRegistry.hpp" />
     <ClInclude Include="ACECS\GameLevel.hpp" />
+    <ClInclude Include="Include\Math.hpp" />
+    <ClInclude Include="Include\TargetTypes.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="Include\NumberGenerator.hpp" />
+    <ClCompile Include="Source\main.cpp">
       <SubType>
       </SubType>
     </ClCompile>

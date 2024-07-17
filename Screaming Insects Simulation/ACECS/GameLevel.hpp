@@ -14,7 +14,7 @@ struct GameLevel : public BaseLevel {
 	// inherit the constructors of BaseLevel so that the user doesn't need to specify them
 	using BaseLevel::BaseLevel;
 
-	uint32_t exampleVariable = 0;
+	bool firstRun = true;
 };
 
 #endif

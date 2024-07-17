@@ -5,7 +5,7 @@
 #ifdef MAX_ENTITIES
 #undef MAX_ENTITIES
 #endif
-#define MAX_ENTITIES 10000
+#define MAX_ENTITIES 15000
 
 #ifdef MAX_COMPONENT_TYPES
 #undef MAX_COMPONENT_TYPES
@@ -20,6 +20,7 @@
 
 #include "ECS.hpp"
 #include "SFML/Graphics.hpp"
+#include "../Include/TargetTypes.hpp"
 #include <functional>
 
 namespace ECSRegistry {
@@ -34,12 +35,35 @@ namespace ECSRegistry {
 // whenever you create a new type, ensure you register it in the implementation file of this header
 namespace EntityEvents {
 #pragma region user_defined_events
-	struct EventExample final : public Event {
-		DUPLICATE_OVERRIDE(EventExample)
+	struct EventScream final : public Event {
+		std::unique_ptr<Duplicatable> duplicate() override {
+			return std::unique_ptr<Duplicatable>(new EventScream(angleToScream, info));
+		};
 
-		EventExample(uint16_t _var = 0) : var(_var) {};
+		EventScream() {};
+		EventScream(float _angleToScream, TargetTypeStepPair _info) :
+			angleToScream(_angleToScream), info(_info)
+		{};
 
-		uint16_t var;
+		// the angle the scream was from
+		float angleToScream = 0;
+
+		// information about the TargetType of the scream and the amount of steps the scream said
+		TargetTypeStepPair info;
+	};
+	struct EventMove final : public Event {
+		std::unique_ptr<Duplicatable> duplicate() override {
+			return std::unique_ptr<Duplicatable>(new EventMove(moveX, moveY));
+		};
+
+		EventMove() {};
+		EventMove(float _moveX, float _moveY) :
+			moveX(_moveX),
+			moveY(_moveY)
+		{};
+
+		float moveX = 0.f;
+		float moveY = 0.f;
 	};
 #pragma endregion user_defined_events
 }
@@ -49,16 +73,110 @@ namespace EntityEvents {
 // whenever you create a new type, ensure you register it in the implementation file of this header
 namespace EntityComponents {
 #pragma region user_defined_components_section
-	struct ComponentExample final : public Component {
-		DUPLICATE_OVERRIDE(ComponentExample)
+
+	struct ComponentMoveByRotation final : public Component {
 
 		void system(Entity& entity) final;
 
-		ComponentExample(uint16_t _var = 0) : var(_var) {
+		ComponentMoveByRotation() {
+			hasSystem = true;
+		};
+		ComponentMoveByRotation(float _moveSpeed) :
+			ComponentMoveByRotation()
+		{
+			moveSpeed = _moveSpeed;
+		}
+
+		float moveSpeed = 1.f;
+
+		std::unique_ptr<Duplicatable> duplicate() override {
+			return std::unique_ptr<Duplicatable>(new ComponentMoveByRotation(moveSpeed));
+		};
+	};
+	struct ComponentBoundReflection final : public Component {
+
+		void system(Entity& entity) final;
+
+		ComponentBoundReflection() {
 			hasSystem = true;
 		};
 
-		uint16_t var;
+		std::unique_ptr<Duplicatable> duplicate() override {
+			return std::unique_ptr<Duplicatable>(new ComponentBoundReflection());
+		};
+	};
+	struct ComponentPosition final : public Component {
+
+		void system(Entity& entity) final;
+
+		ComponentPosition() {
+			hasSystem = true;
+		};
+		ComponentPosition(float _x, float _y) :
+			ComponentPosition()
+		{
+			x = _x;
+			y = _y;
+		};
+		ComponentPosition(sf::Vector2f _position) :
+			ComponentPosition(_position.x, _position.y)
+		{}
+
+		float x = 0;
+		float y = 0;
+
+		std::unique_ptr<Duplicatable> duplicate() override {
+			return std::unique_ptr<Duplicatable>(new ComponentPosition(x, y));
+		};
+	};
+	struct ComponentRotation final : public Component {
+
+		ComponentRotation() {
+			hasSystem = false;
+		};
+		ComponentRotation(float _rotation) :
+			ComponentRotation()
+		{
+			rotation = _rotation;
+		};
+
+		float rotation = 0.f;
+
+		std::unique_ptr<Duplicatable> duplicate() override {
+			return std::unique_ptr<Duplicatable>(new ComponentRotation(rotation));
+		};
+	};
+	struct ComponentTargetStepTracker final : public Component {
+
+		void system(Entity&) final;
+
+		ComponentTargetStepTracker() {
+			hasSystem = true;
+		};
+
+		TargetStepsVector targetStepsVector;
+
+		DUPLICATE_OVERRIDE(ComponentTargetStepTracker)
+	};
+	struct ComponentScream final : public Component {
+
+		void system(Entity& entity) final;
+
+		ComponentScream() {
+			hasSystem = true;
+		};
+
+		DUPLICATE_OVERRIDE(ComponentScream)
+	};
+	struct ComponentHearing final : public Component {
+
+		void system(Entity& entity) final;
+
+		ComponentHearing() {
+			hasSystem = true;
+		};
+
+		DUPLICATE_OVERRIDE(ComponentHearing)
 	};
 #pragma endregion user_defined_components_section
 }
