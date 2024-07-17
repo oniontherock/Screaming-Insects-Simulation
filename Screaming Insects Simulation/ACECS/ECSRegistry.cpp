@@ -85,6 +85,7 @@ void EntityComponents::componentTemplatesInitialize() {
 			createComponentPairFromType<ComponentTargetStepTracker>(),
 			createComponentPairFromType<ComponentScream>(),
 			createComponentPairFromType<ComponentHearing>(),
+			createComponentPairFromType<ComponentObjectGridCellPopulator>(),
 		}
 		);
 }
@@ -98,6 +99,7 @@ using namespace EntityEvents;
 // if you need to include a certain file for a system, include it here.
 #include <iostream>
 #include "../Include/Common/Math.hpp"
+#include "../Include/Simulation/Object Grid/ObjectGrid.hpp"
 
 // if the system is not using the entity parameter, remove it's name to avoid a C4100 error
 
@@ -183,6 +185,25 @@ void ComponentTargetStepTracker::system(Entity& entity) {
 
 		for (uint8_t i = 0; i < targetStepsVector.size(); i++) {
 			targetStepsVector[i] += moveSpeed;
+		}
+	}
+}
+void ComponentObjectGridCellPopulator::system(Entity& entity) {
+	
+	auto* positionComponent = entity.entityComponentGet<ComponentPosition>();
+
+	if (positionComponent) {
+		for (float offsetX = -popRadius / 2.f; offsetX <= popRadius / 2.f; offsetX++) {
+			for (float offsetY = -popRadius / 2.f; offsetY <= popRadius / 2.f; offsetY++) {
+
+				if ((offsetX * offsetX) + (offsetY * offsetY) > popRadius / 2.f) {
+					continue;
+				}
+
+				Cell& cell = ObjectGrid::gridGetCell(positionComponent->x + offsetX, positionComponent->y + offsetY);
+
+				cell.setType(popType, true);
+			}
 		}
 	}
 }

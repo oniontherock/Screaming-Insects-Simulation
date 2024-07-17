@@ -178,6 +178,30 @@ namespace EntityComponents {
 
 		DUPLICATE_OVERRIDE(ComponentHearing)
 	};
+	// populates the area around an entity with the given type and radius
+	struct ComponentObjectGridCellPopulator final : public Component {
+
+		void system(Entity& entity) final;
+
+		ComponentObjectGridCellPopulator() {
+			hasSystem = true;
+		};
+		ComponentObjectGridCellPopulator(float _popRadius, TargetType _popType) :
+			ComponentObjectGridCellPopulator()
+		{
+			popRadius = _popRadius;
+			popType = _popType;
+		}
+
+		// radius to around the entity to populate
+		float popRadius = 0;
+		// type to populate the cells with
+		TargetType popType = TargetType::Home;
+
+		std::unique_ptr<Duplicatable> duplicate() override {
+			return std::unique_ptr<Duplicatable>(new ComponentObjectGridCellPopulator(popRadius, popType));
+		};
+	};
 #pragma endregion user_defined_components_section
 }
 #pragma endregion Components
