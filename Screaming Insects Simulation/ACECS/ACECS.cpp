@@ -2,6 +2,8 @@
 
 void Engine::inputsRegister() {
 	InputInterface::inputRegister("Pause", KeySet{ KeyEvent("Escape", Pressed) });
+	InputInterface::inputRegister("Spawn Home", KeySet{ KeyEvent("LControl", Held), KeyEvent("Mouse Left", Pressed) }, InputKeyLogic::And);
+	InputInterface::inputRegister("Spawn Food", KeySet{ KeyEvent("LControl", Held), KeyEvent("Mouse Right", Pressed) }, InputKeyLogic::And);
 }
 
 // game states are registered here
@@ -14,19 +16,29 @@ void Engine::panelsRegister() {
 		PANEL_DRAW_FUNCTION{
 			GameLevel * gameLevel = static_cast<GameLevel*>(WorldGrid::levelGet(0, 0, 0));
 			
+			sf::VertexArray vertexArray(sf::Points, gameLevel->entities.size());
+
 			for (EntityId i = 0; i < gameLevel->entities.size(); i++) {
 				Entity& entity = EntityManager::entitiesVector[i];
 
 				auto* entityPositionComponent = entity.entityComponentGet<EntityComponents::ComponentPosition>();
 
 				if (entityPositionComponent) {
-					sf::CircleShape circle(2);
+					if (entity.entityComponentHas<EntityComponents::ComponentObjectGridCellPopulator>()) {
+						sf::CircleShape circle(entity.entityComponentGet<EntityComponents::ComponentObjectGridCellPopulator>()->popRadius / 2);
 
-					circle.setPosition(entityPositionComponent->x, entityPositionComponent->y);
+						circle.setOrigin(circle.getRadius(), circle.getRadius());
+						circle.setPosition(entityPositionComponent->x, entityPositionComponent->y);
+						circle.setFillColor(sf::Color::Blue);
 
-					panel.objectDraw(circle);
+						panel.objectDraw(circle);
+					}
+					else {
+						vertexArray[i] = sf::Vector2f(entityPositionComponent->x, entityPositionComponent->y);
+					}
 				}
 			}
+			panel.objectDraw(vertexArray);
 		}
 	);
 }
@@ -65,6 +77,8 @@ void Engine::gameStateRegister() {
 			if (gameLevel->firstRun) {
 				gameLevel->firstRun = false;
 
+				ObjectGrid::gridInitialize(CellDimensions(sf::Vector2i(4, 4)), 320, 180);
+
 				for (uint16_t i = 0; i < 1000; i++) {
 					EntityId entityId = EntityManager::entityCreate(0, 0, 0, EntityUpdateType::Frame);
 					ComponentTemplateManager::componentTemplateApply("Insect", entityId);
@@ -72,11 +86,28 @@ void Engine::gameStateRegister() {
 					Entity& entityInstance = EntityManager::entitiesVector[entityId];
 
 					auto* entityPositionComponent = entityInstance.entityComponentGet<EntityComponents::ComponentPosition>();
-					entityPositionComponent->x = 640;
-					entityPositionComponent->y = 360;
+					entityPositionComponent->x = RNGf::getRange(16, 1280-16);
+					entityPositionComponent->y = RNGf::getRange(16, 720-16);
 
 					entityInstance.entityComponentGet<EntityComponents::ComponentRotation>()->rotation = RNGf::getFullRange(float(M_PI));
+
+					entityInstance.entityComponentGet<EntityComponents::ComponentMoveByRotation>()->moveSpeed = 60.f;
 				}
+			}
+
+			if ((!InputInterface::inputGetActive("Spawn Home")) != (!InputInterface::inputGetActive("Spawn Food"))) {
+				EntityId entityId = EntityManager::entityCreate(0, 0, 0, EntityUpdateType::Frame);
+				ComponentTemplateManager::componentTemplateApply("Target", entityId);
+
+				Entity& entityInstance = EntityManager::entitiesVector[entityId];
+
+				auto* entityPositionComponent = entityInstance.entityComponentGet<EntityComponents::ComponentPosition>();
+				entityPositionComponent->x = float(InputInterface::mousePositionGet().x);
+				entityPositionComponent->y = float(InputInterface::mousePositionGet().y);
+
+				auto* gridCellPopulatorComponent = entityInstance.entityComponentGet<EntityComponents::ComponentObjectGridCellPopulator>();
+				gridCellPopulatorComponent->popType = InputInterface::inputGetActive("Spawn Home") ? TargetType::Home : TargetType::Food;
+				gridCellPopulatorComponent->popRadius = 8 * 4;
 			}
 
 			LevelUpdater::levelsUpdate();

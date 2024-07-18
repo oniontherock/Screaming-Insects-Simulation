@@ -29,27 +29,27 @@ namespace ECSRegistry {
 }
 
 // avoid having undefined constructor arguments for events or components,
-// as it's more convenient to not have to define every event/component all the time
+// as it's more convenient to not have to define every event/component all the time.
+
+// whenever you create a new type, ensure you register it in the implementation file of this header
 
 #pragma region Events
-// whenever you create a new type, ensure you register it in the implementation file of this header
 namespace EntityEvents {
-#pragma region user_defined_events
 	struct EventScream final : public Event {
 		std::unique_ptr<Duplicatable> duplicate() override {
-			return std::unique_ptr<Duplicatable>(new EventScream(angleToScream, info));
+			return std::unique_ptr<Duplicatable>(new EventScream(anglesToScreams, info));
 		};
 
 		EventScream() {};
-		EventScream(float _angleToScream, TargetTypeStepPair _info) :
-			angleToScream(_angleToScream), info(_info)
+		EventScream(std::vector<float> _anglesToScreams, std::vector<TargetTypeStepPair> _info) :
+			anglesToScreams(_anglesToScreams), info(_info)
 		{};
 
 		// the angle the scream was from
-		float angleToScream = 0;
+		std::vector<float> anglesToScreams{};
 
 		// information about the TargetType of the scream and the amount of steps the scream said
-		TargetTypeStepPair info;
+		std::vector<TargetTypeStepPair> info;
 	};
 	struct EventMove final : public Event {
 		std::unique_ptr<Duplicatable> duplicate() override {
@@ -65,15 +65,22 @@ namespace EntityEvents {
 		float moveX = 0.f;
 		float moveY = 0.f;
 	};
-#pragma endregion user_defined_events
+	struct EventTargetReached final : public Event {
+		std::unique_ptr<Duplicatable> duplicate() override {
+			return std::unique_ptr<Duplicatable>(new EventTargetReached(type));
+		};
+
+		EventTargetReached() {};
+		EventTargetReached(TargetType _type) :
+			type(_type)
+		{};
+
+		TargetType type = TargetType::Home;
+	};
 }
 #pragma endregion Events
 #pragma region Components
-// use this file to define new component types.
-// whenever you create a new type, ensure you register it in the implementation file of this header
 namespace EntityComponents {
-#pragma region user_defined_components_section
-
 	struct ComponentMoveByRotation final : public Component {
 
 		void system(Entity& entity) final;
@@ -154,9 +161,20 @@ namespace EntityComponents {
 			hasSystem = true;
 		};
 
-		TargetStepsVector targetStepsVector;
+		TargetStepsVector targetStepsVector = TargetStepsVector(TargetType::TypesCount);
 
 		DUPLICATE_OVERRIDE(ComponentTargetStepTracker)
+	};
+	// holds the entity's current target type
+	struct ComponentTargetHolder final : public Component {
+
+		ComponentTargetHolder() {
+			hasSystem = false;
+		};
+
+		TargetType targetType = TargetType::Food;
+
+		DUPLICATE_OVERRIDE(ComponentTargetHolder)
 	};
 	struct ComponentScream final : public Component {
 
@@ -165,6 +183,13 @@ namespace EntityComponents {
 		ComponentScream() {
 			hasSystem = true;
 		};
+
+		// the type the entity will scream out this update,
+		// this will then be set to the next type after screaming
+		TargetType screamTypeCur = TargetType::Home;
+
+		// max distance a scream can be heard at
+		static constexpr float MAX_SCREAM_DIST = 32.f;
 
 		DUPLICATE_OVERRIDE(ComponentScream)
 	};
@@ -202,7 +227,37 @@ namespace EntityComponents {
 			return std::unique_ptr<Duplicatable>(new ComponentObjectGridCellPopulator(popRadius, popType));
 		};
 	};
-#pragma endregion user_defined_components_section
+	// checks if the entity is on a cell containing a target, and if so, sends an EventTargetReached
+	struct ComponentTargetCollisionChecker final : public Component {
+
+		void system(Entity& entity) final;
+
+		ComponentTargetCollisionChecker() {
+			hasSystem = true;
+		};
+
+		DUPLICATE_OVERRIDE(ComponentTargetCollisionChecker)
+	};
+	struct ComponentStepsResetOnTargetReached final : public Component {
+
+		void system(Entity& entity) final;
+
+		ComponentStepsResetOnTargetReached() {
+			hasSystem = true;
+		};
+
+		DUPLICATE_OVERRIDE(ComponentStepsResetOnTargetReached)
+	};
+	struct ComponentChangeTargetOnTargetReached final : public Component {
+
+		void system(Entity& entity) final;
+
+		ComponentChangeTargetOnTargetReached() {
+			hasSystem = true;
+		};
+
+		DUPLICATE_OVERRIDE(ComponentChangeTargetOnTargetReached)
+	};
 }
 #pragma endregion Components
 

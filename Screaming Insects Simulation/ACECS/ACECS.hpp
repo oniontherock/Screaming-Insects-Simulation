@@ -11,6 +11,7 @@
 #include "ECSRegistry.hpp"
 #include "GameLevel.hpp"
 #include "../Include/Common/NumberGenerator.hpp"
+#include "../Include/Simulation/Object Grid/ObjectGrid.hpp"
 
 #define GAME_STATE_FUNCTION []()
 #define PANEL_DRAW_FUNCTION [](Panel& panel)

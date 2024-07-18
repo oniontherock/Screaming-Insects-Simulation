@@ -1,12 +1,16 @@
-#include "DeltaManager.hpp"
+#include "TimeHandler.hpp"
 
 
-uint32_t TimeHandler::timeRealPrev{ 0 };
-uint32_t TimeHandler::timeRealCur{ 0 };
-uint32_t TimeHandler::timeSimulatedPrev{ 0 };
-uint32_t TimeHandler::timeSimulatedCur{ 0 };
-double TimeHandler::deltaReal{ 0 };
-double TimeHandler::deltaSimulated{ 0 };
+uint32_t TimeHandler::timeRealPrev{ uint32_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) };
+uint32_t TimeHandler::timeRealCur{ uint32_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) };
+uint32_t TimeHandler::timeSimulatedPrev{ uint32_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) };
+uint32_t TimeHandler::timeSimulatedCur{ uint32_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) };
+
+double TimeHandler::deltaReal{ 0.0 };
+double TimeHandler::deltaSimulated{ 0.0 };
+
+float TimeHandler::timescale{ 1.f };
+
 
 void TimeHandler::deltaCompute() {
 
@@ -20,10 +24,10 @@ void TimeHandler::deltaCompute() {
 
 	// the simulated time movement in milliseconds since last frame.
 	// timeSimulatedCur + simulatedTimeMove is equal to the current time according to the timescale
-	float simulatedTimeMovement = (timeDiffReal * (timescale * 1000)) / 1000;
+	uint32_t simulatedTimeMovement = uint32_t((timeDiffReal * (timescale * 1000)) / 1000);
 
 	timeSimulatedCur += simulatedTimeMovement;
-	float timeDiffSimulated = timeSimulatedCur - timeSimulatedPrev;
+	uint32_t timeDiffSimulated = timeSimulatedCur - timeSimulatedPrev;
 	timeSimulatedPrev = timeRealCur;
 
 	deltaSimulated = float(timeDiffSimulated) / 1000.f;
