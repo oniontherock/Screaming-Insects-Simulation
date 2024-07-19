@@ -17,6 +17,8 @@ struct GameLevel : public BaseLevel {
 	bool firstRun = true;
 
 	std::vector<EntityId> targets;
+
+	std::vector<std::vector<EntityId>> insectsTree;
 };
 
 #endif

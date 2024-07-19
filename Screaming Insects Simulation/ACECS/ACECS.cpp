@@ -90,9 +90,9 @@ void Engine::gameStateRegister() {
 					entityPositionComponent->x = RNGf::getRange(16, 1280-16);
 					entityPositionComponent->y = RNGf::getRange(16, 720-16);
 
-					entityInstance.entityComponentGet<EntityComponents::ComponentRotation>()->rotation = RNGf::getFullRange(float(M_PI));
+					entityInstance.entityComponentGet<EntityComponents::ComponentRotation>()->rotation = RNGf::getFullRange(Mathf::PI);
 
-					entityInstance.entityComponentGet<EntityComponents::ComponentMoveByRotation>()->moveSpeed = RNGf::getRange(30.f, 90.f);
+					entityInstance.entityComponentGet<EntityComponents::ComponentMoveByRotation>()->moveSpeed = RNGf::getRange(60.f, 90.f);
 				}
 				for (uint16_t i = 0; i < 20; i++) {
 					EntityId entityId = EntityManager::entityCreate(0, 0, 0, EntityUpdateType::Frame);
@@ -130,7 +130,11 @@ void Engine::gameStateRegister() {
 				gridCellDepopulatorComponent->popRadius = popRad;
 
 
-				static_cast<GameLevel*>(WorldGrid::levelGet(0, 0, 0))->targets.push_back(entityId);
+				entityInstance.entityComponentGet<EntityComponents::ComponentRotation>()->rotation = RNGf::getFullRange(Mathf::PI);
+
+				entityInstance.entityComponentGet<EntityComponents::ComponentMoveByRotation>()->moveSpeed = RNGf::getRange(30.f, 45.f);
+
+				gameLevel->targets.push_back(entityId);
 			}
 			if (InputInterface::inputGetActive("Remove Target")) {
 
@@ -184,10 +188,6 @@ void Engine::gameStateRegister() {
 // initialize the ACECS engine by registering all inputs, initializing the ECS module, and registering game states.
 // of course, certain modules do not have to be initialized if the user does not want them to be
 void Engine::engineInitialize() {
-
-	uint16_t poolInd = RNGfPool::createNewPool(1000);
-	RNGfPool::fillPoolRange(poolInd, -Mathf::PI / 16, +Mathf::PI / 16);
-
 	WorldGrid::levelGridInitialize(1, 1, 1);
 	WorldGrid::levelAdd(new GameLevel(0, 0, 0));
 	WorldGrid::levelActivate(0, 0, 0);

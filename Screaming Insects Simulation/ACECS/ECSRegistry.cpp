@@ -101,6 +101,10 @@ void EntityComponents::componentTemplatesInitialize() {
 			createComponentPairFromType<ComponentObjectGridCellDepopulator>(),
 			createComponentPairFromType<ComponentPosition>(),
 			createComponentPairFromType<ComponentObjectGridCellPopulator>(),
+			createComponentPairFromType<ComponentRotationRandomMovement>(),
+			createComponentPairFromType<ComponentBoundReflection>(),
+			createComponentPairFromType<ComponentMoveByRotation>(),
+			createComponentPairFromType<ComponentRotation>(),
 		}
 		);
 }
@@ -115,7 +119,6 @@ using namespace EntityEvents;
 #include <iostream>
 #include "../Include/Common/Math.hpp"
 #include "../Include/Common/TimeHandler.hpp"
-#include "../Include/Common/NumberGenerator.hpp"
 #include "../Include/Simulation/Object Grid/ObjectGrid.hpp"
 
 // if the system is not using the entity parameter, remove it's name to avoid a C4100 error
@@ -126,8 +129,8 @@ void ComponentMoveByRotation::system(Entity& entity) {
 	if (rotationComponent) {
 		auto* moveEvent = entity.entityEventAddAndReturn<EventMove>();
 
-		moveEvent->moveX = cos(rotationComponent->rotation) * moveSpeed * TimeHandler::deltaRealGet();
-		moveEvent->moveY = sin(rotationComponent->rotation) * moveSpeed * TimeHandler::deltaRealGet();
+		moveEvent->moveX = cos(rotationComponent->rotation) * moveSpeed * float(TimeHandler::deltaRealGet());
+		moveEvent->moveY = sin(rotationComponent->rotation) * moveSpeed * float(TimeHandler::deltaRealGet());
 	}
 }
 void ComponentRotation::system(Entity& entity) {
@@ -279,6 +282,8 @@ void ComponentObjectGridCellPopulator::system(Entity& entity) {
 					continue;
 				}
 
+				if (!ObjectGrid::gridPositionIsValidReal(positionComponent->x + offsetX, positionComponent->y + offsetY)) continue;
+
 				Cell& cell = ObjectGrid::gridGetCellFromReal(positionComponent->x + offsetX, positionComponent->y + offsetY);
 
 				cell.setType(popType, true);
@@ -299,6 +304,8 @@ void ComponentObjectGridCellDepopulator::system(Entity& entity) {
 				if (((offsetX * offsetX) + (offsetY * offsetY)) > (halfRadius * halfRadius)) {
 					continue;
 				}
+
+				if (!ObjectGrid::gridPositionIsValidReal(positionComponent->x + offsetX, positionComponent->y + offsetY)) continue;
 
 				Cell& cell = ObjectGrid::gridGetCellFromReal(positionComponent->x + offsetX, positionComponent->y + offsetY);
 
@@ -356,8 +363,9 @@ void ComponentChangeTargetOnTargetReached::system(Entity& entity) {
 void ComponentRotationRandomMovement::system(Entity& entity) {
 	auto* rotateEvent = entity.entityEventAddAndReturn<EventRotate>();
 
-	rotateEvent->angle = RNGfPool::
+	rotateEvent->angle = RNGfPool::getPoolValue(ANGLE_POOL_IND, anglePoolCurInd);
 
+	anglePoolCurInd = anglePoolCurInd >= ANGLE_POOL_SIZE ? 0 : anglePoolCurInd + 1;
 }
 
 #pragma endregion Systems

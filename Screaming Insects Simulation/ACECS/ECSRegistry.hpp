@@ -21,6 +21,8 @@
 #include "ECS.hpp"
 #include "SFML/Graphics.hpp"
 #include "../Include/Simulation/TargetTypes.hpp"
+#include "../Include/Common/NumberGenerator.hpp"
+#include "../Include/Common/RandomPools.hpp"
 #include <functional>
 
 namespace ECSRegistry {
@@ -71,8 +73,8 @@ namespace EntityEvents {
 		};
 
 		EventRotate() {};
-		EventRotate(float _angle,) :
-			angle(_angle),
+		EventRotate(float _angle) :
+			angle(_angle)
 		{};
 
 		float angle = 0.f;
@@ -299,6 +301,8 @@ namespace EntityComponents {
 		ComponentRotationRandomMovement() {
 			hasSystem = true;
 		};
+
+		uint16_t anglePoolCurInd = RNGu16::getRange(0, ANGLE_POOL_SIZE);
 
 		DUPLICATE_OVERRIDE(ComponentRotationRandomMovement)
 	};

@@ -1,10 +1,12 @@
 ﻿#include "../ACECS/ACECS.hpp"
 #include "../Include/Common/NumberGenerator.hpp"
+#include "../Include/Common/RandomPools.hpp"
 #include "../Include/Common/TimeHandler.hpp"
 
 int main() {
 	
 	RNGf::initialize();
+	poolsInitialize();
 
 	// setup window
 	sf::RenderWindow window(sf::VideoMode(1280, 720), "Window");

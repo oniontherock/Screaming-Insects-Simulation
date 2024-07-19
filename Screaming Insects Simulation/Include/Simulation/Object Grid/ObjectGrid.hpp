@@ -52,6 +52,9 @@ public:
 
 	static void gridInitialize(CellDimensions _cellDimensions, CellCoordinate width, CellCoordinate height);
 
+	static bool gridPositionIsValid(CellCoordinate x, CellCoordinate y);
+	static bool gridPositionIsValidReal(float realX, float realY);
+
 	static Cell& gridGetCell(CellCoordinate x, CellCoordinate y);
 	static Cell& gridGetCellFromReal(float realX, float realY);
 

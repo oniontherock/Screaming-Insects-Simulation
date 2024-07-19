@@ -47,6 +47,13 @@ void ObjectGrid::gridInitialize(CellDimensions _cellDimensions, CellCoordinate w
 	cellGrid = Cells2D(width, Cells1D(height));
 }
 
+bool ObjectGrid::gridPositionIsValid(CellCoordinate x, CellCoordinate y) {
+	return (x >= 0) && (x < cellGrid.size()) && (y >= 0) && (y < cellGrid[0].size());
+}
+bool ObjectGrid::gridPositionIsValidReal(float realX, float realY) {
+	return gridPositionIsValid(CellCoordinate(realX / cellDimensions.x), CellCoordinate(realY / cellDimensions.y));
+}
+
 Cell& ObjectGrid::gridGetCell(CellCoordinate x, CellCoordinate y) {
 	return cellGrid[x][y];
 }
