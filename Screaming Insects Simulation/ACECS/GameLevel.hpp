@@ -15,6 +15,8 @@ struct GameLevel : public BaseLevel {
 	using BaseLevel::BaseLevel;
 
 	bool firstRun = true;
+
+	std::vector<EntityId> targets;
 };
 
 #endif

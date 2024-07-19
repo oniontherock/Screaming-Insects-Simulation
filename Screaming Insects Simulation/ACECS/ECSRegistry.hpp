@@ -65,6 +65,18 @@ namespace EntityEvents {
 		float moveX = 0.f;
 		float moveY = 0.f;
 	};
+	struct EventRotate final : public Event {
+		std::unique_ptr<Duplicatable> duplicate() override {
+			return std::unique_ptr<Duplicatable>(new EventRotate(angle));
+		};
+
+		EventRotate() {};
+		EventRotate(float _angle,) :
+			angle(_angle),
+		{};
+
+		float angle = 0.f;
+	};
 	struct EventTargetReached final : public Event {
 		std::unique_ptr<Duplicatable> duplicate() override {
 			return std::unique_ptr<Duplicatable>(new EventTargetReached(type));
@@ -138,8 +150,10 @@ namespace EntityComponents {
 	};
 	struct ComponentRotation final : public Component {
 
+		void system(Entity& entity) final;
+
 		ComponentRotation() {
-			hasSystem = false;
+			hasSystem = true;
 		};
 		ComponentRotation(float _rotation) :
 			ComponentRotation()
@@ -189,7 +203,7 @@ namespace EntityComponents {
 		TargetType screamTypeCur = TargetType::Home;
 
 		// max distance a scream can be heard at
-		static constexpr float MAX_SCREAM_DIST = 32.f;
+		static constexpr float MAX_SCREAM_DIST = 32;
 
 		DUPLICATE_OVERRIDE(ComponentScream)
 	};
@@ -227,6 +241,26 @@ namespace EntityComponents {
 			return std::unique_ptr<Duplicatable>(new ComponentObjectGridCellPopulator(popRadius, popType));
 		};
 	};
+	// depopulates the area around an entity with the given radius
+	struct ComponentObjectGridCellDepopulator final : public Component {
+
+		void system(Entity& entity) final;
+
+		ComponentObjectGridCellDepopulator() {
+			hasSystem = true;
+		};
+		ComponentObjectGridCellDepopulator(float _popRadius) :
+			ComponentObjectGridCellDepopulator()
+		{
+			popRadius = _popRadius;
+		}
+
+		// radius to around the entity to populate
+		float popRadius = 0;
+		std::unique_ptr<Duplicatable> duplicate() override {
+			return std::unique_ptr<Duplicatable>(new ComponentObjectGridCellDepopulator(popRadius));
+		};
+	};
 	// checks if the entity is on a cell containing a target, and if so, sends an EventTargetReached
 	struct ComponentTargetCollisionChecker final : public Component {
 
@@ -257,6 +291,16 @@ namespace EntityComponents {
 		};
 
 		DUPLICATE_OVERRIDE(ComponentChangeTargetOnTargetReached)
+	};
+	struct ComponentRotationRandomMovement final : public Component {
+
+		void system(Entity& entity) final;
+
+		ComponentRotationRandomMovement() {
+			hasSystem = true;
+		};
+
+		DUPLICATE_OVERRIDE(ComponentRotationRandomMovement)
 	};
 }
 #pragma endregion Components

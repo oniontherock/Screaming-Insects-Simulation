@@ -1,9 +1,6 @@
 #ifndef __ACECS_H__
 #define __ACECS_H__
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-
 #include "Input.hpp"
 #include "GameState.hpp"
 #include "Graphics.hpp"
@@ -11,6 +8,7 @@
 #include "ECSRegistry.hpp"
 #include "GameLevel.hpp"
 #include "../Include/Common/NumberGenerator.hpp"
+#include "../Include/Common/Math.hpp"
 #include "../Include/Simulation/Object Grid/ObjectGrid.hpp"
 
 #define GAME_STATE_FUNCTION []()

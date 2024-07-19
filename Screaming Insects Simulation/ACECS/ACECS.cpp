@@ -4,6 +4,7 @@ void Engine::inputsRegister() {
 	InputInterface::inputRegister("Pause", KeySet{ KeyEvent("Escape", Pressed) });
 	InputInterface::inputRegister("Spawn Home", KeySet{ KeyEvent("LControl", Held), KeyEvent("Mouse Left", Pressed) }, InputKeyLogic::And);
 	InputInterface::inputRegister("Spawn Food", KeySet{ KeyEvent("LControl", Held), KeyEvent("Mouse Right", Pressed) }, InputKeyLogic::And);
+	InputInterface::inputRegister("Remove Target", KeySet{ KeyEvent("LControl", Held), KeyEvent("Mouse Middle", Pressed) }, InputKeyLogic::And);
 }
 
 // game states are registered here
@@ -14,7 +15,7 @@ void Engine::panelsRegister() {
 		PanelRect(0, 0, 1280, 720), // world coordinates
 		sf::Color::Black,
 		PANEL_DRAW_FUNCTION{
-			GameLevel * gameLevel = static_cast<GameLevel*>(WorldGrid::levelGet(0, 0, 0));
+			GameLevel* gameLevel = static_cast<GameLevel*>(WorldGrid::levelGet(0, 0, 0));
 			
 			sf::VertexArray vertexArray(sf::Points, gameLevel->entities.size());
 
@@ -79,7 +80,7 @@ void Engine::gameStateRegister() {
 
 				ObjectGrid::gridInitialize(CellDimensions(sf::Vector2i(4, 4)), 320, 180);
 
-				for (uint16_t i = 0; i < 1000; i++) {
+				for (uint16_t i = 0; i < 980; i++) {
 					EntityId entityId = EntityManager::entityCreate(0, 0, 0, EntityUpdateType::Frame);
 					ComponentTemplateManager::componentTemplateApply("Insect", entityId);
 					
@@ -90,6 +91,20 @@ void Engine::gameStateRegister() {
 					entityPositionComponent->y = RNGf::getRange(16, 720-16);
 
 					entityInstance.entityComponentGet<EntityComponents::ComponentRotation>()->rotation = RNGf::getFullRange(float(M_PI));
+
+					entityInstance.entityComponentGet<EntityComponents::ComponentMoveByRotation>()->moveSpeed = RNGf::getRange(30.f, 90.f);
+				}
+				for (uint16_t i = 0; i < 20; i++) {
+					EntityId entityId = EntityManager::entityCreate(0, 0, 0, EntityUpdateType::Frame);
+					ComponentTemplateManager::componentTemplateApply("Insect Scout", entityId);
+
+					Entity& entityInstance = EntityManager::entitiesVector[entityId];
+
+					auto* entityPositionComponent = entityInstance.entityComponentGet<EntityComponents::ComponentPosition>();
+					entityPositionComponent->x = RNGf::getRange(16, 1280 - 16);
+					entityPositionComponent->y = RNGf::getRange(16, 720 - 16);
+
+					entityInstance.entityComponentGet<EntityComponents::ComponentRotation>()->rotation = RNGf::getFullRange(Mathf::PI);
 
 					entityInstance.entityComponentGet<EntityComponents::ComponentMoveByRotation>()->moveSpeed = 60.f;
 				}
@@ -105,9 +120,33 @@ void Engine::gameStateRegister() {
 				entityPositionComponent->x = float(InputInterface::mousePositionGet().x);
 				entityPositionComponent->y = float(InputInterface::mousePositionGet().y);
 
+				float popRad = 8 * 4;
+
 				auto* gridCellPopulatorComponent = entityInstance.entityComponentGet<EntityComponents::ComponentObjectGridCellPopulator>();
 				gridCellPopulatorComponent->popType = InputInterface::inputGetActive("Spawn Home") ? TargetType::Home : TargetType::Food;
-				gridCellPopulatorComponent->popRadius = 8 * 4;
+				gridCellPopulatorComponent->popRadius = popRad;
+
+				auto* gridCellDepopulatorComponent = entityInstance.entityComponentGet<EntityComponents::ComponentObjectGridCellDepopulator>();
+				gridCellDepopulatorComponent->popRadius = popRad;
+
+
+				static_cast<GameLevel*>(WorldGrid::levelGet(0, 0, 0))->targets.push_back(entityId);
+			}
+			if (InputInterface::inputGetActive("Remove Target")) {
+
+				for (EntityId i = 0; i < gameLevel->targets.size(); i++) {
+					Entity& entityCur = EntityManager::entitiesVector[gameLevel->targets[i]];
+
+					auto* entityPositionComponent = entityCur.entityComponentGet<EntityComponents::ComponentPosition>();
+
+					float axisX = entityPositionComponent->x - float(InputInterface::mousePositionGet().x);
+					float axisY = entityPositionComponent->y - float(InputInterface::mousePositionGet().y);
+
+					if ((axisX * axisX) + (axisY * axisY) < 8 * 8) {
+						entityCur.entityComponentGet<EntityComponents::ComponentObjectGridCellDepopulator>()->system(entityCur);
+						EntityManager::entityTerminate(gameLevel->targets[i]);
+					}
+				}
 			}
 
 			LevelUpdater::levelsUpdate();
@@ -145,6 +184,10 @@ void Engine::gameStateRegister() {
 // initialize the ACECS engine by registering all inputs, initializing the ECS module, and registering game states.
 // of course, certain modules do not have to be initialized if the user does not want them to be
 void Engine::engineInitialize() {
+
+	uint16_t poolInd = RNGfPool::createNewPool(1000);
+	RNGfPool::fillPoolRange(poolInd, -Mathf::PI / 16, +Mathf::PI / 16);
+
 	WorldGrid::levelGridInitialize(1, 1, 1);
 	WorldGrid::levelAdd(new GameLevel(0, 0, 0));
 	WorldGrid::levelActivate(0, 0, 0);

@@ -20,6 +20,7 @@ void EntityEvents::eventIDsInitialize() {
 
 	EventRegistry::typeRegister<EventIDs<EventScream>>();
 	EventRegistry::typeRegister<EventIDs<EventMove>>();
+	EventRegistry::typeRegister<EventIDs<EventRotate>>();
 	EventRegistry::typeRegister<EventIDs<EventTargetReached>>();
 }
 
@@ -32,7 +33,9 @@ void EntityComponents::componentIDsInitialize() {
 
 	using ComponentRegistry = TypeIDAllocator<Component>;
 
+	ComponentRegistry::typeRegister<ComponentIDs<ComponentObjectGridCellDepopulator>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentTargetHolder>>();
+	ComponentRegistry::typeRegister<ComponentIDs<ComponentRotationRandomMovement>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentRotation>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentMoveByRotation>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentBoundReflection>>();
@@ -69,6 +72,24 @@ void EntityComponents::componentTemplatesInitialize() {
 			createComponentPairFromType<ComponentHearing>(),
 			createComponentPairFromType<ComponentTargetHolder>(),
 			createComponentPairFromType<ComponentChangeTargetOnTargetReached>(),
+			createComponentPairFromType<ComponentRotationRandomMovement>(),
+		}
+		);
+	ComponentTemplateManager::componentTemplateAdd(
+
+		/// template name
+		"Insect Scout",
+		/// list of components in template
+		{
+			createComponentPairFromType<ComponentPosition>(),
+			createComponentPairFromType<ComponentBoundReflection>(),
+			createComponentPairFromType<ComponentMoveByRotation>(),
+			createComponentPairFromType<ComponentRotation>(),
+			createComponentPairFromType<ComponentTargetCollisionChecker>(),
+			createComponentPairFromType<ComponentTargetStepTracker>(),
+			createComponentPairFromType<ComponentStepsResetOnTargetReached>(),
+			createComponentPairFromType<ComponentScream>(),
+			createComponentPairFromType<ComponentRotationRandomMovement>(),
 		}
 		);
 	ComponentTemplateManager::componentTemplateAdd(
@@ -77,6 +98,7 @@ void EntityComponents::componentTemplatesInitialize() {
 		"Target",
 		/// list of components in template
 		{
+			createComponentPairFromType<ComponentObjectGridCellDepopulator>(),
 			createComponentPairFromType<ComponentPosition>(),
 			createComponentPairFromType<ComponentObjectGridCellPopulator>(),
 		}
@@ -93,6 +115,7 @@ using namespace EntityEvents;
 #include <iostream>
 #include "../Include/Common/Math.hpp"
 #include "../Include/Common/TimeHandler.hpp"
+#include "../Include/Common/NumberGenerator.hpp"
 #include "../Include/Simulation/Object Grid/ObjectGrid.hpp"
 
 // if the system is not using the entity parameter, remove it's name to avoid a C4100 error
@@ -103,8 +126,15 @@ void ComponentMoveByRotation::system(Entity& entity) {
 	if (rotationComponent) {
 		auto* moveEvent = entity.entityEventAddAndReturn<EventMove>();
 
-		moveEvent->moveX = cos(rotationComponent->rotation) * moveSpeed;
-		moveEvent->moveY = sin(rotationComponent->rotation) * moveSpeed;
+		moveEvent->moveX = cos(rotationComponent->rotation) * moveSpeed * TimeHandler::deltaRealGet();
+		moveEvent->moveY = sin(rotationComponent->rotation) * moveSpeed * TimeHandler::deltaRealGet();
+	}
+}
+void ComponentRotation::system(Entity& entity) {
+	if (entity.entityEventHas<EventRotate>()) {
+		auto* rotateEvent = entity.entityEventGet<EventRotate>();
+
+		rotation += rotateEvent->angle;
 	}
 }
 void ComponentBoundReflection::system(Entity& entity) {
@@ -113,7 +143,6 @@ void ComponentBoundReflection::system(Entity& entity) {
 	if (eventMove) {
 
 		auto* positionComponent = entity.entityComponentGet<ComponentPosition>();
-		auto* rotationComponent = entity.entityComponentGet<ComponentRotation>();
 
 		if (positionComponent) {
 
@@ -127,7 +156,11 @@ void ComponentBoundReflection::system(Entity& entity) {
 				eventMove->moveX = reflectedMove.x;
 				eventMove->moveY = reflectedMove.y;
 
-				rotationComponent->rotation = atan2(reflectedMove.y, reflectedMove.x);
+				auto* rotationComponent = entity.entityComponentGet<ComponentRotation>();
+
+				auto* rotateEvent = entity.entityEventAddAndReturn<EventRotate>();
+
+				rotateEvent->angle = atan2(reflectedMove.y, reflectedMove.x) - rotationComponent->rotation;
 			}
 		}
 	}
@@ -136,8 +169,8 @@ void ComponentPosition::system(Entity& entity) {
 	if (entity.entityEventHas<EventMove>()) {
 		auto* moveEvent = entity.entityEventGet<EventMove>();
 
-		x += moveEvent->moveX * TimeHandler::deltaRealGet();
-		y += moveEvent->moveY * TimeHandler::deltaRealGet();
+		x += moveEvent->moveX;
+		y += moveEvent->moveY;
 	}
 }
 void ComponentScream::system(Entity& entity) {
@@ -160,10 +193,7 @@ void ComponentScream::system(Entity& entity) {
 		float axisX = positionComponent->x - entityOtherPositionComponent->x;
 		float axisY = positionComponent->y - entityOtherPositionComponent->y;
 
-		float axisLenSqrd = (axisX * axisX) + (axisY * axisY);
-
-		if (axisLenSqrd > (MAX_SCREAM_DIST * MAX_SCREAM_DIST)) continue;
-
+		if ((axisX * axisX) + (axisY * axisY) > (MAX_SCREAM_DIST * MAX_SCREAM_DIST)) continue;
 
 		auto* screamEvent = entityOther.entityEventAddAndReturn<EventScream>();
 
@@ -256,6 +286,27 @@ void ComponentObjectGridCellPopulator::system(Entity& entity) {
 		}
 	}
 }
+void ComponentObjectGridCellDepopulator::system(Entity& entity) {
+	auto* positionComponent = entity.entityComponentGet<ComponentPosition>();
+
+	if (positionComponent) {
+
+		float halfRadius = popRadius / 2.f;
+
+		for (float offsetX = -halfRadius; offsetX <= halfRadius; offsetX++) {
+			for (float offsetY = -halfRadius; offsetY <= halfRadius; offsetY++) {
+
+				if (((offsetX * offsetX) + (offsetY * offsetY)) > (halfRadius * halfRadius)) {
+					continue;
+				}
+
+				Cell& cell = ObjectGrid::gridGetCellFromReal(positionComponent->x + offsetX, positionComponent->y + offsetY);
+
+				cell.clearTypes();
+			}
+		}
+	}
+}
 void ComponentTargetCollisionChecker::system(Entity& entity) {
 
 	auto* positionComponent = entity.entityComponentGet<ComponentPosition>();
@@ -297,11 +348,16 @@ void ComponentChangeTargetOnTargetReached::system(Entity& entity) {
 				return;
 			}
 
-			if (entity.entityComponentHas<ComponentRotation>()) {
-				entity.entityComponentGet<ComponentRotation>()->rotation += Mathf::PI;
-			}
+			auto* rotationEvent = entity.entityEventAddAndReturn<EventRotate>();
+			rotationEvent->angle = Mathf::PI;
 		}
 	}
+}
+void ComponentRotationRandomMovement::system(Entity& entity) {
+	auto* rotateEvent = entity.entityEventAddAndReturn<EventRotate>();
+
+	rotateEvent->angle = RNGfPool::
+
 }
 
 #pragma endregion Systems

@@ -126,6 +126,7 @@
     <ClInclude Include="ACECS\ACECS.hpp" />
     <ClInclude Include="ACECS\ECSRegistry.hpp" />
     <ClInclude Include="ACECS\GameLevel.hpp" />
+    <ClInclude Include="Include\Common\RandomPools.hpp" />
     <ClInclude Include="Include\Common\TimeHandler.hpp" />
     <ClInclude Include="Include\Common\Math.hpp" />
     <ClInclude Include="Include\Simulation\Object Grid\ObjectGrid.hpp" />

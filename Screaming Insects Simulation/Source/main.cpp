@@ -33,7 +33,7 @@ int main() {
 		fps++;
 
 		if (fpsTimer > 1.f) {
-			std::cout << fps << std::endl;
+			//std::cout << fps << std::endl;
 
 			fpsTimer = 0.f;
 			fps = 0;

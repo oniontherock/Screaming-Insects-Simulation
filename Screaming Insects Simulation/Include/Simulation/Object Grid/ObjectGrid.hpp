@@ -56,6 +56,7 @@ public:
 	static Cell& gridGetCellFromReal(float realX, float realY);
 
 	static GridDimensions gridGetDimensions();
+	static void gridCellsClear();
 };
 
 #endif

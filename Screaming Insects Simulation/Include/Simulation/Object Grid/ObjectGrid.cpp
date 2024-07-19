@@ -58,4 +58,11 @@ GridDimensions ObjectGrid::gridGetDimensions() {
 	return GridDimensions(int(cellGrid.size()), int(cellGrid[0].size()));
 }
 
+void ObjectGrid::gridCellsClear() {
+	for (uint16_t x = 0; x < cellGrid.size(); x++) {
+		for (uint16_t y = 0; y < cellGrid[x].size(); y++) {
+			cellGrid[x][y].clearTypes();
+		}
+	}
+}
 
