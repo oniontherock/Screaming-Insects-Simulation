@@ -132,7 +132,7 @@ void ComponentMoveByRotation::system(Entity& entity) {
 	auto* rotationComponent = entity.entityComponentGet<ComponentRotation>();
 
 	if (rotationComponent) {
-		auto* moveEvent = entity.entityEventAddAndReturn<EventMove>();
+		auto* moveEvent = entity.entityEventAddAndGet<EventMove>();
 
 		moveEvent->moveX = cos(rotationComponent->rotation) * moveSpeed * float(TimeHandler::deltaSimulatedGet());
 		moveEvent->moveY = sin(rotationComponent->rotation) * moveSpeed * float(TimeHandler::deltaSimulatedGet());
@@ -166,7 +166,7 @@ void ComponentBoundReflection::system(Entity& entity) {
 
 				auto* rotationComponent = entity.entityComponentGet<ComponentRotation>();
 
-				auto* rotateEvent = entity.entityEventAddAndReturn<EventRotate>();
+				auto* rotateEvent = entity.entityEventAddAndGet<EventRotate>();
 
 				rotateEvent->angle = atan2(reflectedMove.y, reflectedMove.x) - rotationComponent->rotation;
 			}
@@ -187,7 +187,7 @@ void ComponentScream::system(Entity& entity) {
 
 	if (!positionComponent) return;
 
-	GameLevel* gameLevel = static_cast<GameLevel*>(WorldGrid::levelGet(entity.levelId));
+	GameLevel* gameLevel = GameLevelGrid::levelGet(entity.levelId);
 
 	auto* stepTrackerComponent = entity.entityComponentGet<ComponentTargetStepTracker>();
 
@@ -219,7 +219,7 @@ void ComponentScream::system(Entity& entity) {
 
 				if ((axisX * axisX) + (axisY * axisY) > (MAX_SCREAM_DIST * MAX_SCREAM_DIST)) continue;
 
-				auto* screamEvent = entityOther.entityEventAddAndReturn<EventScream>();
+				auto* screamEvent = entityOther.entityEventAddAndGet<EventScream>();
 
 				if (screamEvent->lowestScreamsOfTypes[screamTypeCur] < (stepTrackerComponent->targetStepsVector[screamTypeCur] + MAX_SCREAM_DIST)) {
 					continue;
@@ -281,12 +281,12 @@ void ComponentHearing::system(Entity& entity) {
 			// do we have a rotation component? or is it nullptr?
 			if (rotationComponent) {
 
-				auto* rotateEvent = entity.entityEventAddAndReturn<EventRotate>();
+				auto* rotateEvent = entity.entityEventAddAndGet<EventRotate>();
 				rotateEvent->angle += (atan2(screamEvent->axesToScreams[bestInd].y, screamEvent->axesToScreams[bestInd].x)) - rotationComponent->rotation;
 
 				if (entity.entityComponentHas<ComponentPosition>()) {
 
-					GameLevel* gameLevel = static_cast<GameLevel*>(WorldGrid::levelGet(0, 0, 0));
+					GameLevel* gameLevel = GameLevelGrid::levelGet(0, 0, 0);
 
 					auto* positionComponent = entity.entityComponentGet<ComponentPosition>();
 
@@ -378,7 +378,7 @@ void ComponentTargetCollisionChecker::system(Entity& entity) {
 		Cell& cellAtPosition = ObjectGrid::gridGetCellFromReal(positionComponent->x, positionComponent->y);
 
 		if (cellAtPosition.hasAnyType()) {
-			auto* targetReachedEvent = entity.entityEventAddAndReturn<EventTargetReached>();
+			auto* targetReachedEvent = entity.entityEventAddAndGet<EventTargetReached>();
 			targetReachedEvent->type = cellAtPosition.getFirstType();
 		}
 	}
@@ -410,13 +410,13 @@ void ComponentChangeTargetOnTargetReached::system(Entity& entity) {
 				return;
 			}
 
-			auto* rotationEvent = entity.entityEventAddAndReturn<EventRotate>();
+			auto* rotationEvent = entity.entityEventAddAndGet<EventRotate>();
 			rotationEvent->angle = Mathf::PI;
 		}
 	}
 }
 void ComponentRotationRandomMovement::system(Entity& entity) {
-	auto* rotateEvent = entity.entityEventAddAndReturn<EventRotate>();
+	auto* rotateEvent = entity.entityEventAddAndGet<EventRotate>();
 
 	rotateEvent->angle = RNGf::getRange(Mathf::PI / 16.f);
 

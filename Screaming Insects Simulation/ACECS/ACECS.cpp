@@ -22,7 +22,7 @@ void Engine::panelsRegister() {
 		PanelRect(0, 0, 1280, 720), // world coordinates
 		sf::Color::Black,
 		PANEL_DRAW_FUNCTION{
-			GameLevel* gameLevel = static_cast<GameLevel*>(WorldGrid::levelGet(0, 0, 0));
+			GameLevel* gameLevel = GameLevelGrid::levelGet(0, 0, 0);
 
 			sf::VertexArray vertexArray(sf::Points, gameLevel->entities.size());
 
@@ -55,7 +55,7 @@ void Engine::panelsRegister() {
 		PanelRect(0, 0, 1280, 720), // world coordinates
 		sf::Color::Transparent,
 		PANEL_DRAW_FUNCTION{
-			GameLevel* gameLevel = static_cast<GameLevel*>(WorldGrid::levelGet(0, 0, 0));
+			GameLevel* gameLevel = GameLevelGrid::levelGet(0, 0, 0);
 
 			sf::VertexArray vertexArray(sf::Lines, gameLevel->screamConnections.size() * 2);
 
@@ -85,7 +85,7 @@ void Engine::panelsRegister() {
 		PanelRect(0, 0, 1280, 720), // world coordinates
 		sf::Color::Transparent,
 		PANEL_DRAW_FUNCTION{
-			GameLevel * gameLevel = static_cast<GameLevel*>(WorldGrid::levelGet(0, 0, 0));
+			GameLevel * gameLevel = GameLevelGrid::levelGet(0, 0, 0);
 
 			sf::VertexArray vertexArray(sf::Lines, gameLevel->acceptedScreamConnections.size() * 2);
 
@@ -152,9 +152,9 @@ void Engine::gameStateRegister() {
 
 			float zoomAmount = 1.f - (InputInterface::mouseScrollAmountGet() / 32.f);
 
-			PanelManager::panelGet("Game View")->zoomView(zoomAmount);
-			PanelManager::panelGet("Scream View")->zoomView(zoomAmount);
-			PanelManager::panelGet("Hearing View")->zoomView(zoomAmount);
+			PanelManager::panelGet("Game View")->viewZoom(zoomAmount);
+			PanelManager::panelGet("Scream View")->viewZoom(zoomAmount);
+			PanelManager::panelGet("Hearing View")->viewZoom(zoomAmount);
 
 			float panelMoveAmountX = (InputInterface::inputGetActive("Move Panel Right") - InputInterface::inputGetActive("Move Panel Left")) * 4.f;
 			float panelMoveAmountY = (InputInterface::inputGetActive("Move Panel Down") - InputInterface::inputGetActive("Move Panel Up")) * 4.f;
@@ -168,7 +168,7 @@ void Engine::gameStateRegister() {
 			PanelManager::panelGet("Hearing View")->viewRect.left += panelMoveAmountX;
 			PanelManager::panelGet("Hearing View")->viewRect.top += panelMoveAmountY;
 
-			GameLevel* gameLevel = static_cast<GameLevel*>(WorldGrid::levelGet(0, 0, 0));
+			GameLevel* gameLevel = GameLevelGrid::levelGet(0, 0, 0);
 
 			if (gameLevel->firstRun) {
 
@@ -180,8 +180,7 @@ void Engine::gameStateRegister() {
 				constexpr float RATIO_OF_SCOUTS = 0.05f;
 
 				for (uint16_t i = 0; i < TOTAL_INSECTS * (1.f - RATIO_OF_SCOUTS); i++) {
-					EntityId entityId = EntityManager::entityCreate(0, 0, 0, EntityUpdateType::Frame);
-					ComponentTemplateManager::componentTemplateApply("Insect", entityId);
+					EntityId entityId = EntityManager::entityCreate(0, 0, 0, "Insect", EntityUpdateType::Frame);
 					
 					Entity& entityInstance = EntityManager::entitiesVector[entityId];
 
@@ -196,8 +195,7 @@ void Engine::gameStateRegister() {
 					gameLevel->insects.push_back(entityId);
 				}
 				for (uint16_t i = 0; i < TOTAL_INSECTS * RATIO_OF_SCOUTS; i++) {
-					EntityId entityId = EntityManager::entityCreate(0, 0, 0, EntityUpdateType::Frame);
-					ComponentTemplateManager::componentTemplateApply("Insect Scout", entityId);
+					EntityId entityId = EntityManager::entityCreate(0, 0, 0, "Insect Scout", EntityUpdateType::Frame);
 
 					Entity& entityInstance = EntityManager::entitiesVector[entityId];
 
@@ -213,8 +211,7 @@ void Engine::gameStateRegister() {
 			}
 
 			if ((!InputInterface::inputGetActive("Spawn Home")) != (!InputInterface::inputGetActive("Spawn Food"))) {
-				EntityId entityId = EntityManager::entityCreate(0, 0, 0, EntityUpdateType::Frame);
-				ComponentTemplateManager::componentTemplateApply("Target", entityId);
+				EntityId entityId = EntityManager::entityCreate(0, 0, 0, "Target", EntityUpdateType::Frame);
 
 				Entity& entityInstance = EntityManager::entitiesVector[entityId];
 
@@ -312,9 +309,9 @@ void Engine::gameStateRegister() {
 
 			float zoomAmount = 1.f - (InputInterface::mouseScrollAmountGet() / 32.f);
 
-			PanelManager::panelGet("Game View")->zoomView(zoomAmount);
-			PanelManager::panelGet("Scream View")->zoomView(zoomAmount);
-			PanelManager::panelGet("Hearing View")->zoomView(zoomAmount);
+			PanelManager::panelGet("Game View")->viewZoom(zoomAmount);
+			PanelManager::panelGet("Scream View")->viewZoom(zoomAmount);
+			PanelManager::panelGet("Hearing View")->viewZoom(zoomAmount);
 
 			float panelMoveAmountX = (InputInterface::inputGetActive("Move Panel Right") - InputInterface::inputGetActive("Move Panel Left")) * 4.f;
 			float panelMoveAmountY = (InputInterface::inputGetActive("Move Panel Down") - InputInterface::inputGetActive("Move Panel Up")) * 4.f;
@@ -328,7 +325,7 @@ void Engine::gameStateRegister() {
 			PanelManager::panelGet("Hearing View")->viewRect.left += panelMoveAmountX;
 			PanelManager::panelGet("Hearing View")->viewRect.top += panelMoveAmountY;
 
-			GameLevel* gameLevel = static_cast<GameLevel*>(WorldGrid::levelGet(0, 0, 0));
+			GameLevel* gameLevel = GameLevelGrid::levelGet(0, 0, 0);
 
 			for (uint16_t x = 0; x < gameLevel->hearingGrid.size(); x++) {
 				for (uint16_t y = 0; y < gameLevel->hearingGrid[x].size(); y++) {
@@ -389,9 +386,9 @@ void Engine::gameStateRegister() {
 
 			float zoomAmount = 1.f - (InputInterface::mouseScrollAmountGet() / 32.f);
 
-			PanelManager::panelGet("Game View")->zoomView(zoomAmount);
-			PanelManager::panelGet("Scream View")->zoomView(zoomAmount);
-			PanelManager::panelGet("Hearing View")->zoomView(zoomAmount);
+			PanelManager::panelGet("Game View")->viewZoom(zoomAmount);
+			PanelManager::panelGet("Scream View")->viewZoom(zoomAmount);
+			PanelManager::panelGet("Hearing View")->viewZoom(zoomAmount);
 
 			float panelMoveAmountX = (InputInterface::inputGetActive("Move Panel Right") - InputInterface::inputGetActive("Move Panel Left")) * 4.f;
 			float panelMoveAmountY = (InputInterface::inputGetActive("Move Panel Down") - InputInterface::inputGetActive("Move Panel Up")) * 4.f;
@@ -405,7 +402,7 @@ void Engine::gameStateRegister() {
 			PanelManager::panelGet("Hearing View")->viewRect.left += panelMoveAmountX;
 			PanelManager::panelGet("Hearing View")->viewRect.top += panelMoveAmountY;
 
-			GameLevel * gameLevel = static_cast<GameLevel*>(WorldGrid::levelGet(0, 0, 0));
+			GameLevel * gameLevel = GameLevelGrid::levelGet(0, 0, 0);
 
 			for (uint16_t x = 0; x < gameLevel->hearingGrid.size(); x++) {
 				for (uint16_t y = 0; y < gameLevel->hearingGrid[x].size(); y++) {
@@ -430,15 +427,15 @@ void Engine::gameStateRegister() {
 		}
 	);
 
-	GameStateHandler::gameStateFinalizeAddedStates();
+	GameStateHandler::gameStatesAddedStatesFinalize();
 }
 
 // initialize the ACECS engine by registering all inputs, initializing the ECS module, and registering game states.
 // of course, certain modules do not have to be initialized if the user does not want them to be
 void Engine::engineInitialize() {
-	WorldGrid::levelGridInitialize(1, 1, 1);
-	WorldGrid::levelAdd(new GameLevel(0, 0, 0));
-	WorldGrid::levelActivate(0, 0, 0);
+	GameLevelGrid::levelGridInitialize(1, 1, 1);
+	GameLevelGrid::levelAdd(new GameLevel(0, 0, 0));
+	GameLevelGrid::levelActivate(0, 0, 0);
 
 	inputsRegister();
 	ECSRegistry::ECSInitialize();

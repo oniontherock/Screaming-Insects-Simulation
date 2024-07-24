@@ -2,6 +2,7 @@
 #define __GAME_LEVEL_H__
 
 #include "World/Level.hpp"
+#include "World/LevelGrid.hpp"
 #include "SFML/System/Vector2.hpp"
 #include "../Include/Simulation/TargetTypes.hpp"
 
@@ -33,5 +34,7 @@ struct GameLevel : public BaseLevel {
 
 	sf::Vector2i coordinateRealToHearing(float realX, float realY);
 };
+
+using GameLevelGrid = LevelGrid<GameLevel>;
 
 #endif
