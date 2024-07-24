@@ -107,7 +107,7 @@ void EntityComponents::componentTemplatesInitialize() {
 			createComponentPairFromType<ComponentObjectGridCellPopulator>(),
 			createComponentPairFromType<ComponentRotationRandomMovement>(),
 			createComponentPairFromType<ComponentBoundReflection>(),
-			createComponentPairFromType<ComponentMoveByRotation>(),
+			//createComponentPairFromType<ComponentMoveByRotation>(),
 			createComponentPairFromType<ComponentRotation>(),
 		}
 		);

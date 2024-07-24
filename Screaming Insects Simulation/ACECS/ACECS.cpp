@@ -234,7 +234,7 @@ void Engine::gameStateRegister() {
 
 				entityInstance.entityComponentGet<EntityComponents::ComponentRotation>()->rotation = RNGf::getFullRange(Mathf::PI);
 
-				entityInstance.entityComponentGet<EntityComponents::ComponentMoveByRotation>()->moveSpeed = RNGf::getRange(30.f, 45.f);
+				//entityInstance.entityComponentGet<EntityComponents::ComponentMoveByRotation>()->moveSpeed = RNGf::getRange(30.f, 45.f);
 
 				gameLevel->targets.push_back(entityId);
 			}

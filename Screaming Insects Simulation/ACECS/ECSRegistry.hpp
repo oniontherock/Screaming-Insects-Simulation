@@ -1,8 +1,6 @@
 #ifndef __ECS_REGISTRY_H__
 #define __ECS_REGISTRY_H__
 
-
-
 #include "ECS.hpp"
 #include "SFML/Graphics.hpp"
 #include "../Include/Simulation/TargetTypes.hpp"
