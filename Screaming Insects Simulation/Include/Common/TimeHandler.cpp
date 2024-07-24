@@ -28,7 +28,7 @@ void TimeHandler::deltaCompute() {
 
 	timeSimulatedCur += simulatedTimeMovement;
 	uint32_t timeDiffSimulated = timeSimulatedCur - timeSimulatedPrev;
-	timeSimulatedPrev = timeRealCur;
+	timeSimulatedPrev = timeSimulatedCur;
 
 	deltaSimulated = float(timeDiffSimulated) / 1000.f;
 }

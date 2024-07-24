@@ -10,7 +10,7 @@ enum TargetType : uint8_t {
 	TypesCount, // amount of types in the TargetType enum, not actually a TargetType
 };
 // amount of steps to a certain target
-typedef uint16_t Steps;
+typedef uint32_t Steps;
 
 typedef std::pair<TargetType, Steps> TargetTypeStepPair;
 

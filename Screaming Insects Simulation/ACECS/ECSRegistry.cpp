@@ -1,5 +1,9 @@
 #include "ECSRegistry.hpp"
 
+uint32_t MAX_ENTITIES = 11000;
+uint16_t MAX_COMPONENT_TYPES = 4;
+uint16_t MAX_EVENT_TYPES = 13;
+
 void ECSRegistry::ECSInitialize() {
 	EntityComponents::componentIDsInitialize();
 	EntityComponents::componentTemplatesInitialize();
@@ -35,17 +39,17 @@ void EntityComponents::componentIDsInitialize() {
 
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentObjectGridCellDepopulator>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentTargetHolder>>();
-	ComponentRegistry::typeRegister<ComponentIDs<ComponentRotationRandomMovement>>();
-	ComponentRegistry::typeRegister<ComponentIDs<ComponentRotation>>();
-	ComponentRegistry::typeRegister<ComponentIDs<ComponentMoveByRotation>>();
-	ComponentRegistry::typeRegister<ComponentIDs<ComponentBoundReflection>>();
-	ComponentRegistry::typeRegister<ComponentIDs<ComponentPosition>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentTargetStepTracker>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentTargetCollisionChecker>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentStepsResetOnTargetReached>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentChangeTargetOnTargetReached>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentScream>>();
+	ComponentRegistry::typeRegister<ComponentIDs<ComponentRotationRandomMovement>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentHearing>>();
+	ComponentRegistry::typeRegister<ComponentIDs<ComponentMoveByRotation>>();
+	ComponentRegistry::typeRegister<ComponentIDs<ComponentBoundReflection>>();
+	ComponentRegistry::typeRegister<ComponentIDs<ComponentRotation>>();
+	ComponentRegistry::typeRegister<ComponentIDs<ComponentPosition>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentObjectGridCellPopulator>>();
 }
 
@@ -120,6 +124,7 @@ using namespace EntityEvents;
 #include "../Include/Common/Math.hpp"
 #include "../Include/Common/TimeHandler.hpp"
 #include "../Include/Simulation/Object Grid/ObjectGrid.hpp"
+#include "GameLevel.hpp"
 
 // if the system is not using the entity parameter, remove it's name to avoid a C4100 error
 
@@ -129,8 +134,8 @@ void ComponentMoveByRotation::system(Entity& entity) {
 	if (rotationComponent) {
 		auto* moveEvent = entity.entityEventAddAndReturn<EventMove>();
 
-		moveEvent->moveX = cos(rotationComponent->rotation) * moveSpeed * float(TimeHandler::deltaRealGet());
-		moveEvent->moveY = sin(rotationComponent->rotation) * moveSpeed * float(TimeHandler::deltaRealGet());
+		moveEvent->moveX = cos(rotationComponent->rotation) * moveSpeed * float(TimeHandler::deltaSimulatedGet());
+		moveEvent->moveY = sin(rotationComponent->rotation) * moveSpeed * float(TimeHandler::deltaSimulatedGet());
 	}
 }
 void ComponentRotation::system(Entity& entity) {
@@ -182,39 +187,59 @@ void ComponentScream::system(Entity& entity) {
 
 	if (!positionComponent) return;
 
-	BaseLevel* entityLevel = WorldGrid::levelGet(entity.levelId);
+	GameLevel* gameLevel = static_cast<GameLevel*>(WorldGrid::levelGet(entity.levelId));
 
-	for (uint16_t i = 0; i < entityLevel->entities.size(); i++) {
-		Entity& entityOther = EntityManager::entitiesVector[entityLevel->entities[i]];
+	auto* stepTrackerComponent = entity.entityComponentGet<ComponentTargetStepTracker>();
 
-		if (entityLevel->entities[i] == entity.Id) continue;
+	if (!stepTrackerComponent) {
+		std::cerr << "ERROR: Entity has ComponentScream but no ComponentTargetStepTracker" << std::endl;
+		return;
+	}
 
-		auto* entityOtherPositionComponent = entityOther.entityComponentGet<ComponentPosition>();
+	for (int32_t offsetX = -1; offsetX <= 1; offsetX++) {
+		for (int32_t offsetY = -1; offsetY <= 1; offsetY++) {
 
-		if (!entityOtherPositionComponent) continue;
+			if (offsetX == 0 && offsetY == 0) continue;
 
-		float axisX = positionComponent->x - entityOtherPositionComponent->x;
-		float axisY = positionComponent->y - entityOtherPositionComponent->y;
+			sf::Vector2i gridCoordinates = gameLevel->coordinateRealToHearing(positionComponent->x + (offsetX * MAX_SCREAM_DIST), positionComponent->y + (offsetY * MAX_SCREAM_DIST));
 
-		if ((axisX * axisX) + (axisY * axisY) > (MAX_SCREAM_DIST * MAX_SCREAM_DIST)) continue;
+			auto& hearingVector = gameLevel->hearingGrid[gridCoordinates.x][gridCoordinates.y];
 
-		auto* screamEvent = entityOther.entityEventAddAndReturn<EventScream>();
+			for (uint16_t i = 0; i < hearingVector.size(); i++) {
+				Entity& entityOther = EntityManager::entitiesVector[hearingVector[i]];
 
-		auto* stepTrackerComponent = entity.entityComponentGet<ComponentTargetStepTracker>();
+				if (hearingVector[i] == entity.Id) continue;
 
-		if (stepTrackerComponent) {
-			screamEvent->anglesToScreams.push_back(atan2(axisY, axisX));
-			screamEvent->info.push_back(TargetTypeStepPair(screamTypeCur, stepTrackerComponent->targetStepsVector[screamTypeCur] + MAX_SCREAM_DIST));
-		}
-		else {
-			std::cerr << "ERROR: Entity has ComponentScream but no ComponentTargetStepTracker, scream sent with error values" << std::endl;
-			screamEvent->anglesToScreams.push_back(0);
-			screamEvent->info.push_back(TargetTypeStepPair(TargetType::TypesCount, 999999999999));
+				auto* entityOtherPositionComponent = entityOther.entityComponentGet<ComponentPosition>();
+
+				if (!entityOtherPositionComponent) continue;
+
+				float axisX = positionComponent->x - entityOtherPositionComponent->x;
+				float axisY = positionComponent->y - entityOtherPositionComponent->y;
+
+				if ((axisX * axisX) + (axisY * axisY) > (MAX_SCREAM_DIST * MAX_SCREAM_DIST)) continue;
+
+				auto* screamEvent = entityOther.entityEventAddAndReturn<EventScream>();
+
+				if (screamEvent->lowestScreamsOfTypes[screamTypeCur] < (stepTrackerComponent->targetStepsVector[screamTypeCur] + MAX_SCREAM_DIST)) {
+					continue;
+				}
+
+				screamEvent->lowestScreamsOfTypes[screamTypeCur] = stepTrackerComponent->targetStepsVector[screamTypeCur] + Steps(MAX_SCREAM_DIST);
+
+				screamEvent->axesToScreams.push_back(sf::Vector2f(axisX, axisY));
+				screamEvent->info.push_back(TargetTypeStepPair(screamTypeCur, Steps(stepTrackerComponent->targetStepsVector[screamTypeCur] + MAX_SCREAM_DIST)));
+
+				gameLevel->screamConnections.push_back(ScreamConnection(
+					sf::Vector2f(positionComponent->x, positionComponent->y),
+					sf::Vector2f(entityOtherPositionComponent->x, entityOtherPositionComponent->y),
+					screamTypeCur
+				));
+			}
 		}
 	}
 
 	screamTypeCur = static_cast<TargetType>((screamTypeCur + 1) < TargetType::TypesCount ? screamTypeCur + 1 : 0);
-
 }
 void ComponentHearing::system(Entity& entity) {
 
@@ -226,9 +251,12 @@ void ComponentHearing::system(Entity& entity) {
 		// get the entity's target step tracker component or nullptr
 		auto* stepTrackerComponent = entity.entityComponentGet<ComponentTargetStepTracker>();
 
+		uint16_t bestInd = UINT16_MAX;
+
 		// do we have a step tracker component? or is it nullptr?
 		if (stepTrackerComponent) {
-			for (uint16_t i = 0; i < screamEvent->anglesToScreams.size(); i++) {
+			for (uint16_t i = 0; i < screamEvent->axesToScreams.size(); i++) {
+
 				// if it's not nullptr, is the scream event's step count less than our step count to the scream's target?
 				if (screamEvent->info[i].second < stepTrackerComponent->targetStepsVector[screamEvent->info[i].first]) {
 					// if yes, set our step tracker's step value of that target type to the scream's step count
@@ -238,33 +266,52 @@ void ComponentHearing::system(Entity& entity) {
 
 					if (targetHolderComponent) {
 						if (targetHolderComponent->targetType == screamEvent->info[i].first) {
-							// get our rotation component or nullptr
-							auto* rotationComponent = entity.entityComponentGet<ComponentRotation>();
-							// do we have a rotation component? or is it nullptr?
-							if (rotationComponent) {
-								// if we do have a rotation component, set our rotation to the angle to the scream
-								rotationComponent->rotation = screamEvent->anglesToScreams[i];
-							}
+							bestInd = i;
 						}
 					}
 				}
-			}
 
-			screamEvent->anglesToScreams.clear();
-			screamEvent->info.clear();
+				if (RNGf::probability(freedom_coefficient)) break;
+			}
+		}
+
+		if (bestInd != UINT16_MAX) {
+			// get our rotation component or nullptr
+			auto* rotationComponent = entity.entityComponentGet<ComponentRotation>();
+			// do we have a rotation component? or is it nullptr?
+			if (rotationComponent) {
+
+				auto* rotateEvent = entity.entityEventAddAndReturn<EventRotate>();
+				rotateEvent->angle += (atan2(screamEvent->axesToScreams[bestInd].y, screamEvent->axesToScreams[bestInd].x)) - rotationComponent->rotation;
+
+				if (entity.entityComponentHas<ComponentPosition>()) {
+
+					GameLevel* gameLevel = static_cast<GameLevel*>(WorldGrid::levelGet(0, 0, 0));
+
+					auto* positionComponent = entity.entityComponentGet<ComponentPosition>();
+
+					sf::Vector2f position = sf::Vector2f(positionComponent->x, positionComponent->y);
+
+					gameLevel->acceptedScreamConnections.push_back(ScreamConnection(
+						position,
+						position + screamEvent->axesToScreams[bestInd],
+						screamEvent->info[bestInd].first
+					));
+				}
+			}
+		}
+
+
+		screamEvent->axesToScreams.clear();
+		screamEvent->info.clear();
+		for (uint16_t i = 0; i < TargetType::TypesCount; i++) {
+			screamEvent->lowestScreamsOfTypes[i] = 999999999;
 		}
 	}
 }
-void ComponentTargetStepTracker::system(Entity& entity) {
-	if (entity.entityEventHas<EventMove>()) {
-		
-		auto* moveEvent = entity.entityEventGet<EventMove>();
-
-		uint16_t moveSpeed = uint16_t(std::ceil(std::sqrt((moveEvent->moveX * moveEvent->moveX) + (moveEvent->moveY * moveEvent->moveY))));
-
-		for (uint8_t i = 0; i < targetStepsVector.size(); i++) {
-			targetStepsVector[i] += moveSpeed;
-		}
+void ComponentTargetStepTracker::system(Entity&) {
+	for (uint8_t i = 0; i < targetStepsVector.size(); i++) {
+		targetStepsVector[i] += 1;
 	}
 }
 void ComponentObjectGridCellPopulator::system(Entity& entity) {
@@ -320,6 +367,14 @@ void ComponentTargetCollisionChecker::system(Entity& entity) {
 
 	if (positionComponent) {
 
+		if (!ObjectGrid::gridPositionIsValidReal(positionComponent->x, positionComponent->y)) {
+
+			positionComponent->x = 640;
+			positionComponent->y = 360;
+
+			return;
+		}
+
 		Cell& cellAtPosition = ObjectGrid::gridGetCellFromReal(positionComponent->x, positionComponent->y);
 
 		if (cellAtPosition.hasAnyType()) {
@@ -363,7 +418,7 @@ void ComponentChangeTargetOnTargetReached::system(Entity& entity) {
 void ComponentRotationRandomMovement::system(Entity& entity) {
 	auto* rotateEvent = entity.entityEventAddAndReturn<EventRotate>();
 
-	rotateEvent->angle = RNGfPool::getPoolValue(ANGLE_POOL_IND, anglePoolCurInd);
+	rotateEvent->angle = RNGf::getRange(Mathf::PI / 16.f);
 
 	anglePoolCurInd = anglePoolCurInd >= ANGLE_POOL_SIZE ? 0 : anglePoolCurInd + 1;
 }

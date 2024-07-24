@@ -4,7 +4,8 @@
 #include "../Include/Common/TimeHandler.hpp"
 
 int main() {
-	
+
+
 	RNGf::initialize();
 	poolsInitialize();
 
@@ -16,6 +17,8 @@ int main() {
 
 	int fps = 0;
 	float fpsTimer = 0;
+	int counter = 0;
+	int total = 0;
 
 	// run main program loop if window is open
 	while (window.isOpen()) {
@@ -31,12 +34,15 @@ int main() {
 
 		window.display();
 
-		fpsTimer += TimeHandler::deltaRealGet();
+		fpsTimer += float(TimeHandler::deltaRealGet());
 		fps++;
 
 		if (fpsTimer > 1.f) {
-			//std::cout << fps << std::endl;
+			counter++;
+			total += fps;
 
+			std::cout << fps << " " << total / counter << " " << counter << std::endl;
+			
 			fpsTimer = 0.f;
 			fps = 0;
 		}

@@ -2,21 +2,6 @@
 #define __ECS_REGISTRY_H__
 
 
-#ifdef MAX_ENTITIES
-#undef MAX_ENTITIES
-#endif
-#define MAX_ENTITIES 15000
-
-#ifdef MAX_COMPONENT_TYPES
-#undef MAX_COMPONENT_TYPES
-#endif
-#define MAX_COMPONENT_TYPES 32
-
-#ifdef MAX_EVENT_TYPES
-#undef MAX_EVENT_TYPES
-#endif
-#define MAX_EVENT_TYPES 32
-
 
 #include "ECS.hpp"
 #include "SFML/Graphics.hpp"
@@ -39,19 +24,22 @@ namespace ECSRegistry {
 namespace EntityEvents {
 	struct EventScream final : public Event {
 		std::unique_ptr<Duplicatable> duplicate() override {
-			return std::unique_ptr<Duplicatable>(new EventScream(anglesToScreams, info));
+			return std::unique_ptr<Duplicatable>(new EventScream(axesToScreams, info));
 		};
 
 		EventScream() {};
-		EventScream(std::vector<float> _anglesToScreams, std::vector<TargetTypeStepPair> _info) :
-			anglesToScreams(_anglesToScreams), info(_info)
+		EventScream(std::vector<sf::Vector2f> _axesToScreams, std::vector<TargetTypeStepPair> _info) :
+			axesToScreams(_axesToScreams), info(_info)
 		{};
 
-		// the angle the scream was from
-		std::vector<float> anglesToScreams{};
+		// the axis the scream was from
+		std::vector<sf::Vector2f> axesToScreams{};
 
 		// information about the TargetType of the scream and the amount of steps the scream said
 		std::vector<TargetTypeStepPair> info;
+		
+		// array of lowest step values heard for every type
+		Steps lowestScreamsOfTypes[2]{ 99999, 99999 };
 	};
 	struct EventMove final : public Event {
 		std::unique_ptr<Duplicatable> duplicate() override {
@@ -205,7 +193,7 @@ namespace EntityComponents {
 		TargetType screamTypeCur = TargetType::Home;
 
 		// max distance a scream can be heard at
-		static constexpr float MAX_SCREAM_DIST = 32;
+		static constexpr float MAX_SCREAM_DIST = 16.f;
 
 		DUPLICATE_OVERRIDE(ComponentScream)
 	};
@@ -216,6 +204,8 @@ namespace EntityComponents {
 		ComponentHearing() {
 			hasSystem = true;
 		};
+
+		float freedom_coefficient = RNGf::getRange(0.f);
 
 		DUPLICATE_OVERRIDE(ComponentHearing)
 	};
