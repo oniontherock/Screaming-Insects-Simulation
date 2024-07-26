@@ -42,11 +42,11 @@ void EntityComponents::componentIDsInitialize() {
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentTargetStepTracker>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentTargetCollisionChecker>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentStepsResetOnTargetReached>>();
-	ComponentRegistry::typeRegister<ComponentIDs<ComponentChangeTargetOnTargetReached>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentScream>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentRotationRandomMovement>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentHearing>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentMoveByRotation>>();
+	ComponentRegistry::typeRegister<ComponentIDs<ComponentChangeTargetOnTargetReached>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentBoundReflection>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentRotation>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentPosition>>();
@@ -62,13 +62,25 @@ void EntityComponents::componentTemplatesInitialize() {
 	ComponentTemplateManager::componentTemplateAdd(
 
 		/// template name
-		"Insect",
+		"Transform",
 		/// list of components in template
 		{
 			createComponentPairFromType<ComponentPosition>(),
+			createComponentPairFromType<ComponentRotation>(),
+		}
+		);
+
+	ComponentTemplateManager::componentTemplateAdd(
+
+		/// template name
+		"Insect",
+		{
+			"Transform"
+		},
+		/// list of components in template
+		{
 			createComponentPairFromType<ComponentBoundReflection>(),
 			createComponentPairFromType<ComponentMoveByRotation>(),
-			createComponentPairFromType<ComponentRotation>(),
 			createComponentPairFromType<ComponentTargetCollisionChecker>(),
 			createComponentPairFromType<ComponentTargetStepTracker>(),
 			createComponentPairFromType<ComponentStepsResetOnTargetReached>(),
@@ -83,12 +95,13 @@ void EntityComponents::componentTemplatesInitialize() {
 
 		/// template name
 		"Insect Scout",
+		{
+			"Transform"
+		}, 
 		/// list of components in template
 		{
-			createComponentPairFromType<ComponentPosition>(),
 			createComponentPairFromType<ComponentBoundReflection>(),
 			createComponentPairFromType<ComponentMoveByRotation>(),
-			createComponentPairFromType<ComponentRotation>(),
 			createComponentPairFromType<ComponentTargetCollisionChecker>(),
 			createComponentPairFromType<ComponentTargetStepTracker>(),
 			createComponentPairFromType<ComponentStepsResetOnTargetReached>(),
@@ -100,15 +113,16 @@ void EntityComponents::componentTemplatesInitialize() {
 
 		/// template name
 		"Target",
+		{
+			"Transform"
+		},
 		/// list of components in template
 		{
 			createComponentPairFromType<ComponentObjectGridCellDepopulator>(),
-			createComponentPairFromType<ComponentPosition>(),
 			createComponentPairFromType<ComponentObjectGridCellPopulator>(),
 			createComponentPairFromType<ComponentRotationRandomMovement>(),
 			createComponentPairFromType<ComponentBoundReflection>(),
-			//createComponentPairFromType<ComponentMoveByRotation>(),
-			createComponentPairFromType<ComponentRotation>(),
+			createComponentPairFromType<ComponentMoveByRotation>(60.f),
 		}
 		);
 }

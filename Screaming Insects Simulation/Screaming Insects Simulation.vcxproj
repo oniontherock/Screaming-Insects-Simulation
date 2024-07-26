@@ -126,6 +126,8 @@
     <ClInclude Include="ACECS\ACECS.hpp" />
     <ClInclude Include="ACECS\ECSRegistry.hpp" />
     <ClInclude Include="ACECS\GameLevel.hpp" />
+    <ClInclude Include="ACECS\GameStates.hpp" />
+    <ClInclude Include="ACECS\Panels.hpp" />
     <ClInclude Include="Include\Common\RandomPools.hpp" />
     <ClInclude Include="Include\Common\TimeHandler.hpp" />
     <ClInclude Include="Include\Common\Math.hpp" />
@@ -133,6 +135,8 @@
     <ClInclude Include="Include\Simulation\TargetTypes.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ACECS\GameStates.cpp" />
+    <ClCompile Include="ACECS\Panels.cpp" />
     <ClCompile Include="Include\Common\TimeHandler.cpp" />
     <ClCompile Include="Include\Common\NumberGenerator.hpp" />
     <ClCompile Include="Include\Simulation\Object Grid\ObjectGrid.cpp" />

@@ -1,17 +1,19 @@
 #ifndef __ACECS_H__
 #define __ACECS_H__
 
-#include <cmath>
-#include "ECSRegistry.hpp"
-#include "Input.hpp"
-#include "GameState.hpp"
-#include "Graphics.hpp"
-#include "World.hpp"
-#include "GameLevel.hpp"
-#include "../Include/Common/NumberGenerator.hpp"
 #include "../Include/Common/Math.hpp"
+#include "../Include/Common/NumberGenerator.hpp"
 #include "../Include/Common/TimeHandler.hpp"
 #include "../Include/Simulation/Object Grid/ObjectGrid.hpp"
+#include "ECSRegistry.hpp"
+#include "GameLevel.hpp"
+#include "GameState.hpp"
+#include "GameStates.hpp"
+#include "Graphics.hpp"
+#include "Input.hpp"
+#include "Panels.hpp"
+#include "World.hpp"
+#include <cmath>
 
 #define GAME_STATE_FUNCTION []()
 #define PANEL_DRAW_FUNCTION [](Panel& panel)
