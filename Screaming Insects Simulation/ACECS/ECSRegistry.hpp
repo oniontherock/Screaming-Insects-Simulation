@@ -15,29 +15,29 @@ namespace ECSRegistry {
 
 // avoid having undefined constructor arguments for events or components,
 // as it's more convenient to not have to define every event/component all the time.
-
 // whenever you create a new type, ensure you register it in the implementation file of this header
 
-#pragma region Events
 namespace EntityEvents {
 	struct EventScream final : public Event {
 		std::unique_ptr<Duplicatable> duplicate() override {
-			return std::unique_ptr<Duplicatable>(new EventScream(axesToScreams, info));
+			return std::unique_ptr<Duplicatable>(new EventScream(axisToScream, info));
 		};
 
 		EventScream() {};
-		EventScream(std::vector<sf::Vector2f> _axesToScreams, std::vector<TargetTypeStepPair> _info) :
-			axesToScreams(_axesToScreams), info(_info)
+		EventScream(sf::Vector2f _axisToScream, TargetTypeStepPair _info) :
+			axisToScream(_axisToScream), info(_info)
 		{};
 
 		// the axis the scream was from
-		std::vector<sf::Vector2f> axesToScreams{};
+		sf::Vector2f axisToScream{};
 
 		// information about the TargetType of the scream and the amount of steps the scream said
-		std::vector<TargetTypeStepPair> info;
-		
-		// array of lowest step values heard for every type
-		Steps lowestScreamsOfTypes[2]{ 99999, 99999 };
+		TargetTypeStepPair info;
+
+		void clear() final {
+			axisToScream = sf::Vector2f(0, 0);
+			info = TargetTypeStepPair(TargetType::TypesCount, UINT32_MAX);
+		}
 	};
 	struct EventMove final : public Event {
 		std::unique_ptr<Duplicatable> duplicate() override {
@@ -52,6 +52,11 @@ namespace EntityEvents {
 
 		float moveX = 0.f;
 		float moveY = 0.f;
+
+		void clear() final {
+			moveX = 0.f;
+			moveY = 0.f;
+		}
 	};
 	struct EventRotate final : public Event {
 		std::unique_ptr<Duplicatable> duplicate() override {
@@ -64,6 +69,10 @@ namespace EntityEvents {
 		{};
 
 		float angle = 0.f;
+
+		void clear() final {
+			angle = 0.f;
+		}
 	};
 	struct EventTargetReached final : public Event {
 		std::unique_ptr<Duplicatable> duplicate() override {
@@ -75,12 +84,33 @@ namespace EntityEvents {
 			type(_type)
 		{};
 
-		TargetType type = TargetType::Home;
+		TargetType type = TargetType::Food;
+
+		void clear() final {
+			type = TargetType::Food;
+		}
 	};
 }
-#pragma endregion Events
-#pragma region Components
 namespace EntityComponents {
+	struct ComponentVariableRandomizer final : public Component {
+
+		void system(Entity& entity) final;
+
+		ComponentVariableRandomizer() {
+			hasSystem = true;
+		};
+		ComponentVariableRandomizer(std::function<void(Entity& entity)> _randomizeFunction) :
+			ComponentVariableRandomizer()
+		{
+			randomizeFunction = _randomizeFunction;
+		};
+
+		std::function<void(Entity& entity)> randomizeFunction;
+
+		std::unique_ptr<Duplicatable> duplicate() override {
+			return std::unique_ptr<Duplicatable>(new ComponentVariableRandomizer(randomizeFunction));
+		};
+	};
 	struct ComponentMoveByRotation final : public Component {
 
 		void system(Entity& entity) final;
@@ -162,10 +192,17 @@ namespace EntityComponents {
 		ComponentTargetStepTracker() {
 			hasSystem = true;
 		};
+		ComponentTargetStepTracker(TargetStepsVector _targetStepsVector) :
+			ComponentTargetStepTracker()
+		{
+			targetStepsVector = _targetStepsVector;
+		}
 
 		TargetStepsVector targetStepsVector = TargetStepsVector(TargetType::TypesCount);
 
-		DUPLICATE_OVERRIDE(ComponentTargetStepTracker)
+		std::unique_ptr<Duplicatable> duplicate() override {
+			return std::unique_ptr<Duplicatable>(new ComponentTargetStepTracker(targetStepsVector));
+		}
 	};
 	// holds the entity's current target type
 	struct ComponentTargetHolder final : public Component {
@@ -173,10 +210,16 @@ namespace EntityComponents {
 		ComponentTargetHolder() {
 			hasSystem = false;
 		};
+		ComponentTargetHolder(TargetType _targetType) {
+			hasSystem = false;
+			targetType = _targetType;
+		};
 
 		TargetType targetType = TargetType::Food;
 
-		DUPLICATE_OVERRIDE(ComponentTargetHolder)
+		std::unique_ptr<Duplicatable> duplicate() override {
+			return std::unique_ptr<Duplicatable>(new ComponentTargetHolder(targetType));
+		}
 	};
 	struct ComponentScream final : public Component {
 
@@ -188,7 +231,7 @@ namespace EntityComponents {
 
 		// the type the entity will scream out this update,
 		// this will then be set to the next type after screaming
-		TargetType screamTypeCur = TargetType::Home;
+		TargetType screamTypeCur = (RNGf::probability(0.5f) ? TargetType::Home : TargetType::Food);
 
 		// max distance a scream can be heard at
 		static constexpr float MAX_SCREAM_DIST = 16.f;
@@ -203,7 +246,7 @@ namespace EntityComponents {
 			hasSystem = true;
 		};
 
-		float freedom_coefficient = RNGf::getRange(0.f);
+		float freedom_coefficient = RNGf::getRange(0.005f, 0.05f);
 
 		DUPLICATE_OVERRIDE(ComponentHearing)
 	};
@@ -295,6 +338,5 @@ namespace EntityComponents {
 		DUPLICATE_OVERRIDE(ComponentRotationRandomMovement)
 	};
 }
-#pragma endregion Components
 
 #endif

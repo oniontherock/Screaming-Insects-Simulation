@@ -87,6 +87,7 @@ void Engine::engineInitialize() {
 // updates the engines input
 void Engine::engineInputUpdate(sf::RenderWindow& window) {
 	InputInterface::inputUpdate();
+
 	InputInterface::eventsProcess(window);
 }
 // update certain modules of the engine, like the input system, and the game state.

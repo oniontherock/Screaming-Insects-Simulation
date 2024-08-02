@@ -24,8 +24,8 @@ struct GameLevel : public BaseLevel {
 	bool firstRun = true;
 
 	std::vector<EntityId> targets;
-
 	std::vector<EntityId> insects;
+
 	std::vector<std::vector<std::vector<EntityId>>> hearingGrid;
 
 	std::vector<ScreamConnection> screamConnections;

@@ -3,11 +3,31 @@
 #include "ECS/Entities/EntityManager.hpp"
 #include "ECSRegistry.hpp"
 #include "GameLevel.hpp"
+#include "Graphics/PanelManager.hpp"
 #include "Input.hpp"
+#include "../Include/Common/TimeHandler.hpp"
+
 
 void PanelGameView::panelUpdate() {
 
 	checkModeChange();
+
+	float zoomAmount = 1.f - (InputInterface::mouseScrollAmountGet() / 32.f);
+
+	auto& gameViewPanel = PanelManager::panelGet(PanelTypes::GameView);
+
+	gameViewPanel.viewZoomScale(zoomAmount);
+
+	float panelMoveAmountX = float(InputInterface::inputGetActive("Move Panel Right") - InputInterface::inputGetActive("Move Panel Left"));
+	float panelMoveAmountY = float(InputInterface::inputGetActive("Move Panel Down") - InputInterface::inputGetActive("Move Panel Up"));
+
+	float panelMoveSpeed = float((240.f * gameViewPanel.viewZoomGet()) * TimeHandler::deltaSimulatedGet());
+
+	panelMoveAmountX *= panelMoveSpeed;
+	panelMoveAmountY *= panelMoveSpeed;
+
+	gameViewPanel.viewMove(panelMoveAmountX, panelMoveAmountY);
+
 
 	if (mode == Normal) {
 		drawInsects();

@@ -2,16 +2,18 @@
 #include "../Include/Common/NumberGenerator.hpp"
 #include "../Include/Common/RandomPools.hpp"
 #include "../Include/Common/TimeHandler.hpp"
+#include "Graphics/WindowHolder.hpp"
+#include "Input/Input Events/InputManager.hpp"
 
 int main() {
-
 
 	RNGf::initialize();
 	poolsInitialize();
 
 	// setup window
-	sf::RenderWindow window(sf::VideoMode(1280, 720), "Window");
+	WindowHolder::windowInitialize(sf::VideoMode(1280, 720), "Window");
 	//window.setFramerateLimit(60);
+
 
 	Engine::engineInitialize();
 
@@ -21,18 +23,18 @@ int main() {
 	int total = 0;
 
 	// run main program loop if window is open
-	while (window.isOpen()) {
+	while (WindowHolder::windowGet().isOpen()) {
 
 		TimeHandler::deltaCompute();
 		
-		Engine::engineInputUpdate(window);
+		Engine::engineInputUpdate(WindowHolder::windowGet());
 		Engine::engineUpdate();
 
-		window.clear(sf::Color::Black);
+		WindowHolder::windowGet().clear(sf::Color::Black);
 
-		Engine::engineDraw(window);
+		Engine::engineDraw(WindowHolder::windowGet());
 
-		window.display();
+		WindowHolder::windowGet().display();
 
 		fpsTimer += float(TimeHandler::deltaRealGet());
 		fps++;

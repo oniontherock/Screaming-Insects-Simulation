@@ -1,5 +1,6 @@
 #include "GameStates.hpp"
 
+#include "../Include/Common/TimeHandler.hpp"
 #include "../Include/Simulation/Object Grid/ObjectGrid.hpp"
 #include "ECS/Entities/EntityManager.hpp"
 #include "ECSRegistry.hpp"
@@ -8,58 +9,14 @@
 #include "Panels.hpp"
 #include "World/LevelUpdater.hpp"
 
+
 void GameStatePlay::gameStateUpdate() {
-
-	float zoomAmount = 1.f - (InputInterface::mouseScrollAmountGet() / 32.f);
-
-
-	PanelManager::panelGet(PanelTypes::GameView).viewZoom(zoomAmount);
-
-	float panelMoveAmountX = (InputInterface::inputGetActive("Move Panel Right") - InputInterface::inputGetActive("Move Panel Left")) * 4.f;
-	float panelMoveAmountY = (InputInterface::inputGetActive("Move Panel Down") - InputInterface::inputGetActive("Move Panel Up")) * 4.f;
-
-	PanelManager::panelGet(PanelTypes::GameView).viewMove(panelMoveAmountX, panelMoveAmountY);
 
 	GameLevel* gameLevel = GameLevelGrid::levelGet(0, 0, 0);
 
 	if (gameLevel->firstRun) {
-
 		gameLevel->firstRun = false;
-
-		ObjectGrid::gridInitialize(CellDimensions(sf::Vector2i(4, 4)), 320, 180);
-
-		constexpr uint32_t TOTAL_INSECTS = 5000;
-		constexpr float RATIO_OF_SCOUTS = 0.05f;
-
-		for (uint16_t i = 0; i < TOTAL_INSECTS * (1.f - RATIO_OF_SCOUTS); i++) {
-			EntityId entityId = EntityManager::entityCreate(0, 0, 0, "Insect", EntityUpdateType::Frame);
-
-			Entity& entityInstance = EntityManager::entitiesVector[entityId];
-
-			auto* entityPositionComponent = entityInstance.entityComponentGet<EntityComponents::ComponentPosition>();
-			entityPositionComponent->x = RNGf::getRange(16, 1280 - 16);
-			entityPositionComponent->y = RNGf::getRange(16, 720 - 16);
-
-			entityInstance.entityComponentGet<EntityComponents::ComponentRotation>()->rotation = RNGf::getFullRange(Mathf::PI);
-
-			entityInstance.entityComponentGet<EntityComponents::ComponentMoveByRotation>()->moveSpeed = RNGf::getRange(50.f, 110.f);
-
-			gameLevel->insects.push_back(entityId);
-		}
-		for (uint16_t i = 0; i < TOTAL_INSECTS * RATIO_OF_SCOUTS; i++) {
-			EntityId entityId = EntityManager::entityCreate(0, 0, 0, "Insect Scout", EntityUpdateType::Frame);
-
-			Entity& entityInstance = EntityManager::entitiesVector[entityId];
-
-			auto* entityPositionComponent = entityInstance.entityComponentGet<EntityComponents::ComponentPosition>();
-			entityPositionComponent->x = RNGf::getRange(16, 1280 - 16);
-			entityPositionComponent->y = RNGf::getRange(16, 720 - 16);
-
-			entityInstance.entityComponentGet<EntityComponents::ComponentRotation>()->rotation = RNGf::getFullRange(Mathf::PI);
-
-			entityInstance.entityComponentGet<EntityComponents::ComponentMoveByRotation>()->moveSpeed = RNGf::getRange(50.f, 110.f);
-			gameLevel->insects.push_back(entityId);
-		}
+		gameStateFirstStart();
 	}
 
 	if ((!InputInterface::inputGetActive("Spawn Home")) != (!InputInterface::inputGetActive("Spawn Food"))) {
@@ -68,8 +25,11 @@ void GameStatePlay::gameStateUpdate() {
 		Entity& entityInstance = EntityManager::entitiesVector[entityId];
 
 		auto* entityPositionComponent = entityInstance.entityComponentGet<EntityComponents::ComponentPosition>();
-		entityPositionComponent->x = float(InputInterface::mousePositionGet().x);
-		entityPositionComponent->y = float(InputInterface::mousePositionGet().y);
+
+		sf::Vector2f panelMousePosition = PanelManager::panelGet(PanelTypes::GameView).viewMousePositionGet();
+
+		entityPositionComponent->x = panelMousePosition.x;
+		entityPositionComponent->y = panelMousePosition.y;
 
 		float populationRadius = 8 * 4;
 
@@ -87,6 +47,7 @@ void GameStatePlay::gameStateUpdate() {
 
 		gameLevel->targets.push_back(entityId);
 	}
+
 	if (InputInterface::inputGetActive("Remove Target")) {
 
 		for (EntityId i = 0; i < gameLevel->targets.size(); i++) {
@@ -94,8 +55,8 @@ void GameStatePlay::gameStateUpdate() {
 
 			auto* entityPositionComponent = entityCur.entityComponentGet<EntityComponents::ComponentPosition>();
 
-			float axisX = entityPositionComponent->x - float(InputInterface::mousePositionGet().x);
-			float axisY = entityPositionComponent->y - float(InputInterface::mousePositionGet().y);
+			float axisX = entityPositionComponent->x - float(InputInterface::windowMousePositionGet().x);
+			float axisY = entityPositionComponent->y - float(InputInterface::windowMousePositionGet().y);
 
 			if ((axisX * axisX) + (axisY * axisY) < 8 * 8) {
 				entityCur.entityComponentGet<EntityComponents::ComponentObjectGridCellDepopulator>()->system(entityCur);
@@ -124,6 +85,23 @@ void GameStatePlay::gameStateUpdate() {
 	gameLevel->acceptedScreamConnections.clear();
 
 	LevelUpdater::levelsUpdate();
+}
+void GameStatePlay::gameStateFirstStart() {
+	GameLevel* gameLevel = GameLevelGrid::levelGet(0, 0, 0);
+
+	ObjectGrid::gridInitialize(CellDimensions(sf::Vector2i(4, 4)), 320, 180);
+
+	constexpr uint32_t TOTAL_INSECTS = 5000;
+	constexpr float RATIO_OF_SCOUTS = 0.05f;
+
+	for (uint16_t i = 0; i < TOTAL_INSECTS * (1.f - RATIO_OF_SCOUTS); i++) {
+		EntityId entityId = EntityManager::entityCreate(0, 0, 0, "Insect", EntityUpdateType::Frame);
+		gameLevel->insects.push_back(entityId);
+	}
+	for (uint16_t i = 0; i < TOTAL_INSECTS * RATIO_OF_SCOUTS; i++) {
+		EntityId entityId = EntityManager::entityCreate(0, 0, 0, "Insect Scout", EntityUpdateType::Frame);
+		gameLevel->insects.push_back(entityId);
+	}
 }
 
 void GameStatePause::gameStateUpdate() {

@@ -1,13 +1,14 @@
 #include "ECSRegistry.hpp"
 
 uint32_t MAX_ENTITIES = 11000;
-uint16_t MAX_COMPONENT_TYPES = 4;
-uint16_t MAX_EVENT_TYPES = 13;
+uint16_t MAX_COMPONENT_TYPES = 14;
+uint16_t MAX_EVENT_TYPES = 4;
 
 void ECSRegistry::ECSInitialize() {
 	EntityComponents::componentIDsInitialize();
 	EntityComponents::componentTemplatesInitialize();
 	EntityEvents::eventIDsInitialize();
+	EventPool::eventPoolInitialize();
 }
 void ECSRegistry::ECSTerminate() {
 	EntityEvents::allEventsTerminate();
@@ -37,19 +38,20 @@ void EntityComponents::componentIDsInitialize() {
 
 	using ComponentRegistry = TypeIDAllocator<Component>;
 
+	ComponentRegistry::typeRegister<ComponentIDs<ComponentVariableRandomizer>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentObjectGridCellDepopulator>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentTargetHolder>>();
-	ComponentRegistry::typeRegister<ComponentIDs<ComponentTargetStepTracker>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentTargetCollisionChecker>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentStepsResetOnTargetReached>>();
-	ComponentRegistry::typeRegister<ComponentIDs<ComponentScream>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentRotationRandomMovement>>();
-	ComponentRegistry::typeRegister<ComponentIDs<ComponentHearing>>();
-	ComponentRegistry::typeRegister<ComponentIDs<ComponentMoveByRotation>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentChangeTargetOnTargetReached>>();
+	ComponentRegistry::typeRegister<ComponentIDs<ComponentMoveByRotation>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentBoundReflection>>();
-	ComponentRegistry::typeRegister<ComponentIDs<ComponentRotation>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentPosition>>();
+	ComponentRegistry::typeRegister<ComponentIDs<ComponentTargetStepTracker>>();
+	ComponentRegistry::typeRegister<ComponentIDs<ComponentScream>>();
+	ComponentRegistry::typeRegister<ComponentIDs<ComponentHearing>>();
+	ComponentRegistry::typeRegister<ComponentIDs<ComponentRotation>>();
 	ComponentRegistry::typeRegister<ComponentIDs<ComponentObjectGridCellPopulator>>();
 }
 
@@ -69,18 +71,35 @@ void EntityComponents::componentTemplatesInitialize() {
 			createComponentPairFromType<ComponentRotation>(),
 		}
 		);
+	ComponentTemplateManager::componentTemplateAdd(
+
+		/// template name
+		"MoveAndReflect",
+		/// list of components in template
+		{
+			createComponentPairFromType<ComponentMoveByRotation>(),
+			createComponentPairFromType<ComponentBoundReflection>(),
+		}
+		);
 
 	ComponentTemplateManager::componentTemplateAdd(
 
 		/// template name
 		"Insect",
 		{
-			"Transform"
+			"Transform",
+			"MoveAndReflect",
 		},
 		/// list of components in template
 		{
-			createComponentPairFromType<ComponentBoundReflection>(),
-			createComponentPairFromType<ComponentMoveByRotation>(),
+			createComponentPairFromType<ComponentVariableRandomizer>([](Entity& entity) {
+				auto* entityPositionComponent = entity.entityComponentGet<ComponentPosition>();
+				entityPositionComponent->x = RNGf::getRange(16, 1280 - 16);
+				entityPositionComponent->y = RNGf::getRange(16, 720 - 16);
+				entity.entityComponentGet<ComponentRotation>()->rotation = RNGf::getFullRange(Mathf::PI);
+				entity.entityComponentGet<ComponentMoveByRotation>()->moveSpeed = RNGf::getRange(16.f) + 80.f;
+				entity.entityComponentTerminate<ComponentVariableRandomizer>();
+				}),
 			createComponentPairFromType<ComponentTargetCollisionChecker>(),
 			createComponentPairFromType<ComponentTargetStepTracker>(),
 			createComponentPairFromType<ComponentStepsResetOnTargetReached>(),
@@ -96,12 +115,19 @@ void EntityComponents::componentTemplatesInitialize() {
 		/// template name
 		"Insect Scout",
 		{
-			"Transform"
+			"Transform",
+			"MoveAndReflect",
 		}, 
 		/// list of components in template
 		{
-			createComponentPairFromType<ComponentBoundReflection>(),
-			createComponentPairFromType<ComponentMoveByRotation>(),
+			createComponentPairFromType<ComponentVariableRandomizer>([](Entity& entity) {
+				auto* entityPositionComponent = entity.entityComponentGet<ComponentPosition>();
+				entityPositionComponent->x = RNGf::getRange(16, 1280 - 16);
+				entityPositionComponent->y = RNGf::getRange(16, 720 - 16);
+				entity.entityComponentGet<ComponentRotation>()->rotation = RNGf::getFullRange(Mathf::PI);
+				entity.entityComponentGet<ComponentMoveByRotation>()->moveSpeed = RNGf::getRange(16.f) + 80.f;
+				entity.entityComponentTerminate<ComponentVariableRandomizer>();
+				}),
 			createComponentPairFromType<ComponentTargetCollisionChecker>(),
 			createComponentPairFromType<ComponentTargetStepTracker>(),
 			createComponentPairFromType<ComponentStepsResetOnTargetReached>(),
@@ -122,7 +148,7 @@ void EntityComponents::componentTemplatesInitialize() {
 			createComponentPairFromType<ComponentObjectGridCellPopulator>(),
 			createComponentPairFromType<ComponentRotationRandomMovement>(),
 			createComponentPairFromType<ComponentBoundReflection>(),
-			createComponentPairFromType<ComponentMoveByRotation>(60.f),
+			//createComponentPairFromType<ComponentMoveByRotation>(30.f),
 		}
 		);
 }
@@ -142,41 +168,66 @@ using namespace EntityEvents;
 
 // if the system is not using the entity parameter, remove it's name to avoid a C4100 error
 
+void ComponentVariableRandomizer::system(Entity& entity) {
+	std::invoke(randomizeFunction, entity);
+}
 void ComponentMoveByRotation::system(Entity& entity) {
 	auto* rotationComponent = entity.entityComponentGet<ComponentRotation>();
 
 	if (rotationComponent) {
+		
+		float rotation = rotationComponent->rotation;
+		
 		auto* moveEvent = entity.entityEventAddAndGet<EventMove>();
 
-		moveEvent->moveX = cos(rotationComponent->rotation) * moveSpeed * float(TimeHandler::deltaSimulatedGet());
-		moveEvent->moveY = sin(rotationComponent->rotation) * moveSpeed * float(TimeHandler::deltaSimulatedGet());
+		if (entity.entityEventHas<EventRotate>()) {
+			auto rotateEvents = entity.entityEventGetAllOfType<EventRotate>();
+
+			for (uint16_t i = 0; i < rotateEvents.size(); i++) {
+				rotation += rotateEvents[i]->angle;
+			}
+		}
+
+		moveEvent->moveX = cos(rotation) * moveSpeed * float(TimeHandler::deltaSimulatedGet());
+		moveEvent->moveY = sin(rotation) * moveSpeed * float(TimeHandler::deltaSimulatedGet());
 	}
 }
 void ComponentRotation::system(Entity& entity) {
 	if (entity.entityEventHas<EventRotate>()) {
-		auto* rotateEvent = entity.entityEventGet<EventRotate>();
+		auto rotateEvents = entity.entityEventGetAllOfType<EventRotate>();
 
-		rotation += rotateEvent->angle;
+		for (uint16_t i = 0; i < rotateEvents.size(); i++) {
+			rotation += rotateEvents[i]->angle;
+		}
+
 	}
 }
 void ComponentBoundReflection::system(Entity& entity) {
 
-	auto* eventMove = entity.entityEventGet<EventMove>();
-	if (eventMove) {
+	if (entity.entityEventHas<EventMove>()) {
+		auto moveEvents = entity.entityEventGetAllOfType<EventMove>();
+
+		sf::Vector2f finalMoveAmount{};
+
+		for (uint16_t i = 0; i < moveEvents.size(); i++) {
+			finalMoveAmount.x += moveEvents[i]->moveX;
+			finalMoveAmount.y += moveEvents[i]->moveY;
+		}
+		entity.entityEventTerminateAllOfType<EventMove>();
 
 		auto* positionComponent = entity.entityComponentGet<ComponentPosition>();
 
 		if (positionComponent) {
 
-			float normalX = float((positionComponent->x + eventMove->moveX < 0) - (positionComponent->x + eventMove->moveX >= 1280));
-			float normalY = float((positionComponent->y + eventMove->moveY < 0) - (positionComponent->y + eventMove->moveY >= 720));
+			float normalX = float((positionComponent->x + finalMoveAmount.x < 0) - (positionComponent->x + finalMoveAmount.x >= 1280));
+			float normalY = float((positionComponent->y + finalMoveAmount.y < 0) - (positionComponent->y + finalMoveAmount.y >= 720));
 
 			if (normalX != 0 || normalY != 0) {
 
-				sf::Vector2f reflectedMove = Vector2fMath::reflect(eventMove->moveX, eventMove->moveY, normalX, normalY);
+				sf::Vector2f reflectedMove = Vector2fMath::reflect(finalMoveAmount.x, finalMoveAmount.y, normalX, normalY);
 
-				eventMove->moveX = reflectedMove.x;
-				eventMove->moveY = reflectedMove.y;
+				finalMoveAmount.x = reflectedMove.x;
+				finalMoveAmount.y = reflectedMove.y;
 
 				auto* rotationComponent = entity.entityComponentGet<ComponentRotation>();
 
@@ -185,14 +236,22 @@ void ComponentBoundReflection::system(Entity& entity) {
 				rotateEvent->angle = atan2(reflectedMove.y, reflectedMove.x) - rotationComponent->rotation;
 			}
 		}
+
+		auto* moveEvent = entity.entityEventAddAndGet<EventMove>();
+	
+		moveEvent->moveX = finalMoveAmount.x;
+		moveEvent->moveY = finalMoveAmount.y;
 	}
 }
 void ComponentPosition::system(Entity& entity) {
 	if (entity.entityEventHas<EventMove>()) {
-		auto* moveEvent = entity.entityEventGet<EventMove>();
 
-		x += moveEvent->moveX;
-		y += moveEvent->moveY;
+		auto moveEvents = entity.entityEventGetAllOfType<EventMove>();
+
+		for (uint16_t i = 0; i < moveEvents.size(); i++) {
+			x += moveEvents[i]->moveX;
+			y += moveEvents[i]->moveY;
+		}
 	}
 }
 void ComponentScream::system(Entity& entity) {
@@ -206,7 +265,7 @@ void ComponentScream::system(Entity& entity) {
 	auto* stepTrackerComponent = entity.entityComponentGet<ComponentTargetStepTracker>();
 
 	if (!stepTrackerComponent) {
-		std::cerr << "ERROR: Entity has ComponentScream but no ComponentTargetStepTracker" << std::endl;
+		ConsoleHandler::consolePrintErr("Entity has ComponentScream but no ComponentTargetStepTracker");
 		return;
 	}
 
@@ -235,14 +294,8 @@ void ComponentScream::system(Entity& entity) {
 
 				auto* screamEvent = entityOther.entityEventAddAndGet<EventScream>();
 
-				if (screamEvent->lowestScreamsOfTypes[screamTypeCur] < (stepTrackerComponent->targetStepsVector[screamTypeCur] + MAX_SCREAM_DIST)) {
-					continue;
-				}
-
-				screamEvent->lowestScreamsOfTypes[screamTypeCur] = stepTrackerComponent->targetStepsVector[screamTypeCur] + Steps(MAX_SCREAM_DIST);
-
-				screamEvent->axesToScreams.push_back(sf::Vector2f(axisX, axisY));
-				screamEvent->info.push_back(TargetTypeStepPair(screamTypeCur, Steps(stepTrackerComponent->targetStepsVector[screamTypeCur] + MAX_SCREAM_DIST)));
+				screamEvent->axisToScream = sf::Vector2f(axisX, axisY);
+				screamEvent->info = TargetTypeStepPair(screamTypeCur, Steps(stepTrackerComponent->targetStepsVector[screamTypeCur] + MAX_SCREAM_DIST));
 
 				gameLevel->screamConnections.push_back(ScreamConnection(
 					sf::Vector2f(positionComponent->x, positionComponent->y),
@@ -260,7 +313,7 @@ void ComponentHearing::system(Entity& entity) {
 	// has there been a scream?
 	if (entity.entityEventHas<EventScream>()) {
 		// if yes, get the scream event
-		auto* screamEvent = entity.entityEventGet<EventScream>();
+		auto screamEvents = entity.entityEventGetAllOfType<EventScream>();
 
 		// get the entity's target step tracker component or nullptr
 		auto* stepTrackerComponent = entity.entityComponentGet<ComponentTargetStepTracker>();
@@ -269,17 +322,21 @@ void ComponentHearing::system(Entity& entity) {
 
 		// do we have a step tracker component? or is it nullptr?
 		if (stepTrackerComponent) {
-			for (uint16_t i = 0; i < screamEvent->axesToScreams.size(); i++) {
+			for (uint16_t i = 0; i < screamEvents.size(); i++) {
+
+				auto* screamEventCur = static_cast<EventScream*>(screamEvents[i]);
+
+				Steps curSteps = screamEventCur->info.second;
 
 				// if it's not nullptr, is the scream event's step count less than our step count to the scream's target?
-				if (screamEvent->info[i].second < stepTrackerComponent->targetStepsVector[screamEvent->info[i].first]) {
+				if (curSteps < stepTrackerComponent->targetStepsVector[screamEventCur->info.first]) {
 					// if yes, set our step tracker's step value of that target type to the scream's step count
-					stepTrackerComponent->targetStepsVector[screamEvent->info[i].first] = screamEvent->info[i].second;
+					stepTrackerComponent->targetStepsVector[screamEventCur->info.first] = curSteps;
 
 					auto* targetHolderComponent = entity.entityComponentGet<ComponentTargetHolder>();
 
 					if (targetHolderComponent) {
-						if (targetHolderComponent->targetType == screamEvent->info[i].first) {
+						if (targetHolderComponent->targetType == screamEventCur->info.first) {
 							bestInd = i;
 						}
 					}
@@ -290,13 +347,16 @@ void ComponentHearing::system(Entity& entity) {
 		}
 
 		if (bestInd != UINT16_MAX) {
+		
+			auto* screamEventBest = static_cast<EventScream*>(screamEvents[bestInd]);
+			
 			// get our rotation component or nullptr
 			auto* rotationComponent = entity.entityComponentGet<ComponentRotation>();
 			// do we have a rotation component? or is it nullptr?
 			if (rotationComponent) {
 
 				auto* rotateEvent = entity.entityEventAddAndGet<EventRotate>();
-				rotateEvent->angle += (atan2(screamEvent->axesToScreams[bestInd].y, screamEvent->axesToScreams[bestInd].x)) - rotationComponent->rotation;
+				rotateEvent->angle = atan2(screamEventBest->axisToScream.y, screamEventBest->axisToScream.x) - rotationComponent->rotation;
 
 				if (entity.entityComponentHas<ComponentPosition>()) {
 
@@ -308,25 +368,32 @@ void ComponentHearing::system(Entity& entity) {
 
 					gameLevel->acceptedScreamConnections.push_back(ScreamConnection(
 						position,
-						position + screamEvent->axesToScreams[bestInd],
-						screamEvent->info[bestInd].first
+						position + screamEventBest->axisToScream,
+						screamEventBest->info.first
 					));
 				}
 			}
 		}
-
-
-		screamEvent->axesToScreams.clear();
-		screamEvent->info.clear();
-		for (uint16_t i = 0; i < TargetType::TypesCount; i++) {
-			screamEvent->lowestScreamsOfTypes[i] = 999999999;
-		}
 	}
 }
-void ComponentTargetStepTracker::system(Entity&) {
-	for (uint8_t i = 0; i < targetStepsVector.size(); i++) {
-		targetStepsVector[i] += 1;
+void ComponentTargetStepTracker::system(Entity& entity) {
+	if (entity.entityEventHas<EventMove>()) {
+
+		auto moveEvents = entity.entityEventGetAllOfType<EventMove>();
+
+		float finalMoveDist = 0;
+
+		for (uint16_t i = 0; i < moveEvents.size(); i++) {
+			finalMoveDist += (moveEvents[i]->moveX * moveEvents[i]->moveX) + (moveEvents[i]->moveY * moveEvents[i]->moveY);
+		}
+
+		finalMoveDist = ceil(sqrt(finalMoveDist));
+
+		for (uint8_t i = 0; i < targetStepsVector.size(); i++) {
+			targetStepsVector[i] += Steps(finalMoveDist);
+		}
 	}
+
 }
 void ComponentObjectGridCellPopulator::system(Entity& entity) {
 	
@@ -408,9 +475,11 @@ void ComponentStepsResetOnTargetReached::system(Entity& entity) {
 }
 void ComponentChangeTargetOnTargetReached::system(Entity& entity) {
 
-	auto* targetReachedEvent = entity.entityEventGet<EventTargetReached>();
 
-	if (targetReachedEvent) {
+	if (entity.entityEventHas<EventTargetReached>()) {
+		
+		auto* targetReachedEvent = entity.entityEventGet<EventTargetReached>();
+		
 		auto* targetHolderComponent = entity.entityComponentGet<ComponentTargetHolder>();
 
 		if (targetHolderComponent) {
@@ -424,8 +493,10 @@ void ComponentChangeTargetOnTargetReached::system(Entity& entity) {
 				return;
 			}
 
-			auto* rotationEvent = entity.entityEventAddAndGet<EventRotate>();
-			rotationEvent->angle = Mathf::PI;
+			entity.entityEventTerminateAllOfType<EventRotate>();
+
+			auto* rotateEvent = entity.entityEventAddAndGet<EventRotate>();
+			rotateEvent->angle = Mathf::PI;
 		}
 	}
 }
