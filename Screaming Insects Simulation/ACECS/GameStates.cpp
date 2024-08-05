@@ -91,7 +91,7 @@ void GameStatePlay::gameStateFirstStart() {
 
 	ObjectGrid::gridInitialize(CellDimensions(sf::Vector2i(4, 4)), 320, 180);
 
-	constexpr uint32_t TOTAL_INSECTS = 2500;
+	constexpr uint32_t TOTAL_INSECTS = 5000;
 	constexpr float RATIO_OF_SCOUTS = 0.05f;
 
 	for (uint16_t i = 0; i < TOTAL_INSECTS * (1.f - RATIO_OF_SCOUTS); i++) {

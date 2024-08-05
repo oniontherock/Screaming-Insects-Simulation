@@ -323,6 +323,8 @@ namespace EntityComponents {
 			hasSystem = true;
 		};
 
+		float lastBounceTimer = 0.f;
+
 		DUPLICATE_OVERRIDE(ComponentChangeTargetOnTargetReached)
 	};
 	struct ComponentRotationRandomMovement final : public Component {

@@ -93,7 +93,7 @@ void EntityComponents::componentTemplatesInitialize() {
 				entityPositionComponent->x = RNGf::getRange(16, 1280 - 16);
 				entityPositionComponent->y = RNGf::getRange(16, 720 - 16);
 				entity.entityComponentGet<ComponentRotation>()->rotation = RNGf::getFullRange(Mathf::PI);
-				entity.entityComponentGet<ComponentMoveByRotation>()->moveSpeed = RNGf::getRange(16.f) + 90;
+				entity.entityComponentGet<ComponentMoveByRotation>()->moveSpeed = 90.f + RNGf::getRange(16.f);
 				entity.entityComponentTerminate<ComponentVariableRandomizer>();
 				}),
 		}
@@ -379,23 +379,9 @@ void ComponentHearing::system(Entity& entity) {
 	}
 }
 void ComponentTargetStepTracker::system(Entity& entity) {
-	if (entity.entityEventHas<EventMove>()) {
-
-		auto moveEvents = entity.entityEventGetAllOfType<EventMove>();
-
-		float finalMoveDist = 0;
-
-		for (uint16_t i = 0; i < moveEvents.size(); i++) {
-			finalMoveDist += (moveEvents[i]->moveX * moveEvents[i]->moveX) + (moveEvents[i]->moveY * moveEvents[i]->moveY);
-		}
-
-		finalMoveDist = ceil(sqrt(finalMoveDist));
-
-		for (uint8_t i = 0; i < targetStepsVector.size(); i++) {
-			targetStepsVector[i] += Steps(finalMoveDist);
-		}
+	for (uint8_t i = 0; i < targetStepsVector.size(); i++) {
+		targetStepsVector[i] += 1;
 	}
-
 }
 void ComponentObjectGridCellPopulator::system(Entity& entity) {
 	
@@ -477,6 +463,7 @@ void ComponentStepsResetOnTargetReached::system(Entity& entity) {
 }
 void ComponentChangeTargetOnTargetReached::system(Entity& entity) {
 
+	//lastBounceTimer += TimeHandler::deltaSimulatedGet();
 
 	if (entity.entityEventHas<EventTargetReached>()) {
 		
@@ -495,10 +482,14 @@ void ComponentChangeTargetOnTargetReached::system(Entity& entity) {
 				return;
 			}
 
+			//if (lastBounceTimer < 1.f) return;
+
 			entity.entityEventTerminateAllOfType<EventRotate>();
 
 			auto* rotateEvent = entity.entityEventAddAndGet<EventRotate>();
 			rotateEvent->angle = Mathf::PI;
+
+			//lastBounceTimer = 0.f;
 		}
 	}
 }
