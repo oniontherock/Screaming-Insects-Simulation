@@ -5,6 +5,7 @@ uint16_t MAX_COMPONENT_TYPES = 14;
 uint16_t MAX_EVENT_TYPES = 4;
 
 void ECSRegistry::ECSInitialize() {
+	EntityManager::entityIdsInitialize();
 	EntityComponents::componentIDsInitialize();
 	EntityComponents::componentTemplatesInitialize();
 	EntityEvents::eventIDsInitialize();
@@ -81,6 +82,22 @@ void EntityComponents::componentTemplatesInitialize() {
 			createComponentPairFromType<ComponentBoundReflection>(),
 		}
 		);
+	ComponentTemplateManager::componentTemplateAdd(
+
+		/// template name
+		"InsectVariableRandomizer",
+		/// list of components in template
+		{
+			createComponentPairFromType<ComponentVariableRandomizer>([](Entity& entity) {
+				auto* entityPositionComponent = entity.entityComponentGet<ComponentPosition>();
+				entityPositionComponent->x = RNGf::getRange(16, 1280 - 16);
+				entityPositionComponent->y = RNGf::getRange(16, 720 - 16);
+				entity.entityComponentGet<ComponentRotation>()->rotation = RNGf::getFullRange(Mathf::PI);
+				entity.entityComponentGet<ComponentMoveByRotation>()->moveSpeed = RNGf::getRange(16.f) + 90;
+				entity.entityComponentTerminate<ComponentVariableRandomizer>();
+				}),
+		}
+		);
 
 	ComponentTemplateManager::componentTemplateAdd(
 
@@ -89,17 +106,10 @@ void EntityComponents::componentTemplatesInitialize() {
 		{
 			"Transform",
 			"MoveAndReflect",
+			"InsectVariableRandomizer",
 		},
 		/// list of components in template
 		{
-			createComponentPairFromType<ComponentVariableRandomizer>([](Entity& entity) {
-				auto* entityPositionComponent = entity.entityComponentGet<ComponentPosition>();
-				entityPositionComponent->x = RNGf::getRange(16, 1280 - 16);
-				entityPositionComponent->y = RNGf::getRange(16, 720 - 16);
-				entity.entityComponentGet<ComponentRotation>()->rotation = RNGf::getFullRange(Mathf::PI);
-				entity.entityComponentGet<ComponentMoveByRotation>()->moveSpeed = RNGf::getRange(16.f) + 80.f;
-				entity.entityComponentTerminate<ComponentVariableRandomizer>();
-				}),
 			createComponentPairFromType<ComponentTargetCollisionChecker>(),
 			createComponentPairFromType<ComponentTargetStepTracker>(),
 			createComponentPairFromType<ComponentStepsResetOnTargetReached>(),
@@ -117,17 +127,10 @@ void EntityComponents::componentTemplatesInitialize() {
 		{
 			"Transform",
 			"MoveAndReflect",
+			"InsectVariableRandomizer",
 		}, 
 		/// list of components in template
 		{
-			createComponentPairFromType<ComponentVariableRandomizer>([](Entity& entity) {
-				auto* entityPositionComponent = entity.entityComponentGet<ComponentPosition>();
-				entityPositionComponent->x = RNGf::getRange(16, 1280 - 16);
-				entityPositionComponent->y = RNGf::getRange(16, 720 - 16);
-				entity.entityComponentGet<ComponentRotation>()->rotation = RNGf::getFullRange(Mathf::PI);
-				entity.entityComponentGet<ComponentMoveByRotation>()->moveSpeed = RNGf::getRange(16.f) + 80.f;
-				entity.entityComponentTerminate<ComponentVariableRandomizer>();
-				}),
 			createComponentPairFromType<ComponentTargetCollisionChecker>(),
 			createComponentPairFromType<ComponentTargetStepTracker>(),
 			createComponentPairFromType<ComponentStepsResetOnTargetReached>(),
@@ -287,14 +290,13 @@ void ComponentScream::system(Entity& entity) {
 
 				if (!entityOtherPositionComponent) continue;
 
-				float axisX = positionComponent->x - entityOtherPositionComponent->x;
-				float axisY = positionComponent->y - entityOtherPositionComponent->y;
+				sf::Vector2f axis = Vector2fMath::axis(positionComponent->x, positionComponent->y, entityOtherPositionComponent->x, entityOtherPositionComponent->y);
 
-				if ((axisX * axisX) + (axisY * axisY) > (MAX_SCREAM_DIST * MAX_SCREAM_DIST)) continue;
+				if (Vector2fMath::lengthSqrd(axis) > (MAX_SCREAM_DIST * MAX_SCREAM_DIST)) continue;
 
 				auto* screamEvent = entityOther.entityEventAddAndGet<EventScream>();
 
-				screamEvent->axisToScream = sf::Vector2f(axisX, axisY);
+				screamEvent->axisToScream = axis;
 				screamEvent->info = TargetTypeStepPair(screamTypeCur, Steps(stepTrackerComponent->targetStepsVector[screamTypeCur] + MAX_SCREAM_DIST));
 
 				gameLevel->screamConnections.push_back(ScreamConnection(

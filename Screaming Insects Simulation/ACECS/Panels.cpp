@@ -30,6 +30,7 @@ void PanelGameView::panelUpdate() {
 
 
 	if (mode == Normal) {
+		drawTargets();
 		drawInsects();
 	}
 	if (mode == Screams) {
@@ -59,30 +60,37 @@ void PanelGameView::checkModeChange() {
 		}
 	}
 }
+void PanelGameView::drawTargets() {
+	GameLevel* gameLevel = GameLevelGrid::levelGet(0, 0, 0);
+
+	for (uint32_t i = 0; i < gameLevel->targets.size(); i++) {
+		Entity& entity = EntityManager::entitiesVector[gameLevel->targets[i]];
+
+		auto* entityPositionComponent = entity.entityComponentGet<EntityComponents::ComponentPosition>();
+		if (entityPositionComponent && entity.entityComponentHas<EntityComponents::ComponentObjectGridCellPopulator>()) {
+			sf::CircleShape circle(entity.entityComponentGet<EntityComponents::ComponentObjectGridCellPopulator>()->popRadius / 2);
+
+			circle.setOrigin(circle.getRadius(), circle.getRadius());
+			circle.setPosition(entityPositionComponent->x, entityPositionComponent->y);
+			circle.setFillColor(sf::Color::Blue);
+
+			objectDraw(circle);
+		}
+	}
+}
 
 void PanelGameView::drawInsects() {
 	GameLevel* gameLevel = GameLevelGrid::levelGet(0, 0, 0);
 
-	sf::VertexArray vertexArray(sf::Points, gameLevel->entities.size());
+	sf::VertexArray vertexArray(sf::Points, gameLevel->insects.size());
 
-	for (EntityId i = 0; i < gameLevel->entities.size(); i++) {
-		Entity& entity = EntityManager::entitiesVector[i];
+	for (uint32_t i = 0; i < gameLevel->insects.size(); i++) {
+		Entity& entity = EntityManager::entitiesVector[gameLevel->insects[i]];
 
 		auto* entityPositionComponent = entity.entityComponentGet<EntityComponents::ComponentPosition>();
 
 		if (entityPositionComponent) {
-			if (entity.entityComponentHas<EntityComponents::ComponentObjectGridCellPopulator>()) {
-				sf::CircleShape circle(entity.entityComponentGet<EntityComponents::ComponentObjectGridCellPopulator>()->popRadius / 2);
-
-				circle.setOrigin(circle.getRadius(), circle.getRadius());
-				circle.setPosition(entityPositionComponent->x, entityPositionComponent->y);
-				circle.setFillColor(sf::Color::Blue);
-
-				objectDraw(circle);
-			}
-			else {
-				vertexArray[i] = sf::Vector2f(entityPositionComponent->x, entityPositionComponent->y);
-			}
+			vertexArray[i] = sf::Vector2f(entityPositionComponent->x, entityPositionComponent->y);
 		}
 	}
 

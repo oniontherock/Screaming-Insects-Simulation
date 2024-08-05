@@ -25,6 +25,7 @@ private:
 	void drawInsects();
 	void drawScreams();
 	void drawHearing();
+	void drawTargets();
 };
 
 

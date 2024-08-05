@@ -43,24 +43,24 @@ void GameStatePlay::gameStateUpdate() {
 
 		entityInstance.entityComponentGet<EntityComponents::ComponentRotation>()->rotation = RNGf::getFullRange(Mathf::PI);
 
-		//entityInstance.entityComponentGet<EntityComponents::ComponentMoveByRotation>()->moveSpeed = RNGf::getRange(30.f, 45.f);
-
 		gameLevel->targets.push_back(entityId);
 	}
 
 	if (InputInterface::inputGetActive("Remove Target")) {
 
-		for (EntityId i = 0; i < gameLevel->targets.size(); i++) {
+		for (uint32_t i = 0; i < gameLevel->targets.size(); i++) {
+			
 			Entity& entityCur = EntityManager::entitiesVector[gameLevel->targets[i]];
 
 			auto* entityPositionComponent = entityCur.entityComponentGet<EntityComponents::ComponentPosition>();
 
-			float axisX = entityPositionComponent->x - float(InputInterface::windowMousePositionGet().x);
-			float axisY = entityPositionComponent->y - float(InputInterface::windowMousePositionGet().y);
+			sf::Vector2f mousePos = PanelManager::panelGet(PanelName::GameView).viewMousePositionGet();
 
-			if ((axisX * axisX) + (axisY * axisY) < 8 * 8) {
+			if (Vector2fMath::distSqrd(mousePos.x, mousePos.y, entityPositionComponent->x, entityPositionComponent->y) < 32 * 32) {
 				entityCur.entityComponentGet<EntityComponents::ComponentObjectGridCellDepopulator>()->system(entityCur);
 				EntityManager::entityTerminate(gameLevel->targets[i]);
+				gameLevel->targets.erase(gameLevel->targets.begin() + i);
+				break;
 			}
 		}
 	}
@@ -71,7 +71,7 @@ void GameStatePlay::gameStateUpdate() {
 		}
 	}
 
-	for (EntityId i = 0; i < gameLevel->insects.size(); i++) {
+	for (uint32_t i = 0; i < gameLevel->insects.size(); i++) {
 		Entity& entityCur = EntityManager::entitiesVector[gameLevel->insects[i]];
 
 		auto* entityPositionComponent = entityCur.entityComponentGet<EntityComponents::ComponentPosition>();
@@ -91,7 +91,7 @@ void GameStatePlay::gameStateFirstStart() {
 
 	ObjectGrid::gridInitialize(CellDimensions(sf::Vector2i(4, 4)), 320, 180);
 
-	constexpr uint32_t TOTAL_INSECTS = 5000;
+	constexpr uint32_t TOTAL_INSECTS = 2500;
 	constexpr float RATIO_OF_SCOUTS = 0.05f;
 
 	for (uint16_t i = 0; i < TOTAL_INSECTS * (1.f - RATIO_OF_SCOUTS); i++) {

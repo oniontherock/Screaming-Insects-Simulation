@@ -28,8 +28,6 @@ GameLevel::GameLevel(LevelPosition _id) :
 	GameLevel(_id.x, _id.y, _id.z)
 {}
 
-
-
 sf::Vector2i GameLevel::coordinateRealToHearing(float realX, float realY) {
 	float halfScreamDist = EntityComponents::ComponentScream::MAX_SCREAM_DIST / 2.f;
 
@@ -50,4 +48,3 @@ sf::Vector2i GameLevel::coordinateRealToHearing(float realX, float realY) {
 
 	return sf::Vector2i(gridX, gridY);
 }
-
