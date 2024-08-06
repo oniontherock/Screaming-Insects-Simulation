@@ -9,7 +9,7 @@ protected:
 	std::random_device generatorSeed;
 
 	uint32_t getState() {
- 		uint32_t x = state;
+		uint32_t x = state;
 
 		x ^= x << 13;
 		x ^= x >> 17;
