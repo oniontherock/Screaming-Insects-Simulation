@@ -190,6 +190,11 @@ namespace EntityComponents {
 		void system(Entity&) final;
 
 		ComponentTargetStepTracker() {
+
+			for (uint16_t i = 0; i < targetStepsVector.size(); i++) {
+				targetStepsVector[i] = 9999999;
+			}
+
 			hasSystem = true;
 		};
 		ComponentTargetStepTracker(TargetStepsVector _targetStepsVector) :
@@ -234,7 +239,7 @@ namespace EntityComponents {
 		TargetType screamTypeCur = (RNGf::probability(0.5f) ? TargetType::Home : TargetType::Food);
 
 		// max distance a scream can be heard at
-		static constexpr float MAX_SCREAM_DIST = 16.f;
+		static float MAX_SCREAM_DIST;
 
 		DUPLICATE_OVERRIDE(ComponentScream)
 	};

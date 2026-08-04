@@ -2,7 +2,7 @@
 
 uint32_t MAX_ENTITIES = 11000;
 uint16_t MAX_COMPONENT_TYPES = 14;
-uint16_t MAX_EVENT_TYPES = 4;
+uint16_t MAX_EVENT_TYPES = 5;
 
 void ECSRegistry::ECSInitialize() {
 	EntityManager::entityIdsInitialize();
@@ -24,6 +24,8 @@ void EntityEvents::eventIDsInitialize() {
 
 	using EventRegistry = TypeIDAllocator<Event>;
 
+
+	EventRegistry::typeRegister<EventIDs<EventInitialize>>();
 	EventRegistry::typeRegister<EventIDs<EventScream>>();
 	EventRegistry::typeRegister<EventIDs<EventMove>>();
 	EventRegistry::typeRegister<EventIDs<EventRotate>>();
@@ -151,7 +153,7 @@ void EntityComponents::componentTemplatesInitialize() {
 			createComponentPairFromType<ComponentObjectGridCellPopulator>(),
 			createComponentPairFromType<ComponentRotationRandomMovement>(),
 			createComponentPairFromType<ComponentBoundReflection>(),
-			//createComponentPairFromType<ComponentMoveByRotation>(30.f),
+			createComponentPairFromType<ComponentMoveByRotation>(30.f),
 		}
 		);
 }
@@ -168,6 +170,9 @@ using namespace EntityEvents;
 #include "../Include/Common/TimeHandler.hpp"
 #include "../Include/Simulation/Object Grid/ObjectGrid.hpp"
 #include "GameLevel.hpp"
+
+
+float ComponentScream::MAX_SCREAM_DIST = 50;
 
 // if the system is not using the entity parameter, remove it's name to avoid a C4100 error
 
@@ -199,7 +204,12 @@ void ComponentRotation::system(Entity& entity) {
 	if (entity.entityEventHas<EventRotate>()) {
 		auto rotateEvents = entity.entityEventGetAllOfType<EventRotate>();
 
+
 		for (uint16_t i = 0; i < rotateEvents.size(); i++) {
+			if (rotateEvents[i] == nullptr) {
+				continue;
+			}
+
 			rotation += rotateEvents[i]->angle;
 		}
 
@@ -328,7 +338,13 @@ void ComponentHearing::system(Entity& entity) {
 
 				auto* screamEventCur = static_cast<EventScream*>(screamEvents[i]);
 
+				if (screamEventCur == nullptr) {
+					continue;
+				}
+
 				Steps curSteps = screamEventCur->info.second;
+
+
 
 				// if it's not nullptr, is the scream event's step count less than our step count to the scream's target?
 				if (curSteps < stepTrackerComponent->targetStepsVector[screamEventCur->info.first]) {

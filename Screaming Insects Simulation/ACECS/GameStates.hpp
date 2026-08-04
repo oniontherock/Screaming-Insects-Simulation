@@ -26,6 +26,8 @@ struct GameStatePlay : public GameState {
 
 private:
 	void gameStateFirstStart();
+
+	void spawnInsects(uint32_t insectCount, float ratioOfScouts);
 };
 
 struct GameStatePause : public GameState {

@@ -11,7 +11,7 @@ int main() {
 	poolsInitialize();
 
 	// setup window
-	WindowHolder::windowInitialize(sf::VideoMode(1280, 720), "Window");
+	WindowHolder::windowInitialize(sf::VideoMode(sf::Vector2u(1280, 720)), "Window");
 	//window.setFramerateLimit(60);
 
 

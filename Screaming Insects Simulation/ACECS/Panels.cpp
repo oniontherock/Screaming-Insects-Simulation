@@ -70,8 +70,8 @@ void PanelGameView::drawTargets() {
 		if (entityPositionComponent && entity.entityComponentHas<EntityComponents::ComponentObjectGridCellPopulator>()) {
 			sf::CircleShape circle(entity.entityComponentGet<EntityComponents::ComponentObjectGridCellPopulator>()->popRadius / 2);
 
-			circle.setOrigin(circle.getRadius(), circle.getRadius());
-			circle.setPosition(entityPositionComponent->x, entityPositionComponent->y);
+			circle.setOrigin(sf::Vector2f(circle.getRadius(), circle.getRadius()));
+			circle.setPosition(sf::Vector2f(entityPositionComponent->x, entityPositionComponent->y));
 			circle.setFillColor(sf::Color::Blue);
 
 			objectDraw(circle);
@@ -82,7 +82,7 @@ void PanelGameView::drawTargets() {
 void PanelGameView::drawInsects() {
 	GameLevel* gameLevel = GameLevelGrid::levelGet(0, 0, 0);
 
-	sf::VertexArray vertexArray(sf::Points, gameLevel->insects.size());
+	sf::VertexArray vertexArray(sf::PrimitiveType::Points, gameLevel->insects.size());
 
 	for (uint32_t i = 0; i < gameLevel->insects.size(); i++) {
 		Entity& entity = EntityManager::entitiesVector[gameLevel->insects[i]];
@@ -90,7 +90,7 @@ void PanelGameView::drawInsects() {
 		auto* entityPositionComponent = entity.entityComponentGet<EntityComponents::ComponentPosition>();
 
 		if (entityPositionComponent) {
-			vertexArray[i] = sf::Vector2f(entityPositionComponent->x, entityPositionComponent->y);
+			vertexArray[i].position = sf::Vector2f(entityPositionComponent->x, entityPositionComponent->y);
 		}
 	}
 
@@ -99,7 +99,7 @@ void PanelGameView::drawInsects() {
 void PanelGameView::drawScreams() {
 	GameLevel* gameLevel = GameLevelGrid::levelGet(0, 0, 0);
 
-	sf::VertexArray vertexArray(sf::Lines, gameLevel->screamConnections.size() * 2);
+	sf::VertexArray vertexArray(sf::PrimitiveType::Lines, gameLevel->screamConnections.size() * 2);
 
 	for (uint32_t i = 0; i < gameLevel->screamConnections.size(); i++) {
 
@@ -107,8 +107,8 @@ void PanelGameView::drawScreams() {
 
 		uint32_t lineInd = i * 2;
 
-		vertexArray[lineInd + 0] = std::get<0>(connectionCur);
-		vertexArray[lineInd + 1] = std::get<1>(connectionCur);
+		vertexArray[lineInd + 0].position = std::get<0>(connectionCur);
+		vertexArray[lineInd + 1].position = std::get<1>(connectionCur);
 
 		sf::Color homeColor = sf::Color(255, 255, 0, 255 / 8);
 		sf::Color foodColor = sf::Color(0, 255, 255, 255 / 8);
@@ -124,7 +124,7 @@ void PanelGameView::drawScreams() {
 void PanelGameView::drawHearing() {
 	GameLevel* gameLevel = GameLevelGrid::levelGet(0, 0, 0);
 
-	sf::VertexArray vertexArray(sf::Lines, gameLevel->acceptedScreamConnections.size() * 2);
+	sf::VertexArray vertexArray(sf::PrimitiveType::Lines, gameLevel->acceptedScreamConnections.size() * 2);
 
 	for (uint32_t i = 0; i < gameLevel->acceptedScreamConnections.size(); i++) {
 
@@ -132,8 +132,8 @@ void PanelGameView::drawHearing() {
 
 		uint32_t lineInd = i * 2;
 
-		vertexArray[lineInd + 0] = std::get<0>(connectionCur);
-		vertexArray[lineInd + 1] = std::get<1>(connectionCur);
+		vertexArray[lineInd + 0].position = std::get<0>(connectionCur);
+		vertexArray[lineInd + 1].position = std::get<1>(connectionCur);
 
 		sf::Color homeColor = sf::Color(255, 255, 0, 255 / 4);
 		sf::Color foodColor = sf::Color(0, 255, 255, 255 / 4);

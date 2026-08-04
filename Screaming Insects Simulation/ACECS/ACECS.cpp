@@ -2,24 +2,30 @@
 
 void Engine::inputsRegister() {
 	InputInterface::inputRegister("Pause", KeySet{ KeyEvent("Escape", Pressed) });
+
 	InputInterface::inputRegister("Toggle Scream View", KeySet{ KeyEvent("Num1", Pressed) });
 	InputInterface::inputRegister("Toggle Hearing View", KeySet{ KeyEvent("Num2", Pressed) });
+
 	InputInterface::inputRegister("Spawn Home", KeySet{ KeyEvent("LControl", Held), KeyEvent("Mouse Left", Pressed) }, InputKeyLogic::And);
 	InputInterface::inputRegister("Spawn Food", KeySet{ KeyEvent("LControl", Held), KeyEvent("Mouse Right", Pressed) }, InputKeyLogic::And);
 	InputInterface::inputRegister("Remove Target", KeySet{ KeyEvent("LControl", Held), KeyEvent("Mouse Middle", Pressed) }, InputKeyLogic::And);
 
-	InputInterface::inputRegister("Move Panel Right", KeySet{ KeyEvent("D", Held), KeyEvent("Right", Held) });
-	InputInterface::inputRegister("Move Panel Up", KeySet{ KeyEvent("W", Held), KeyEvent("Up", Held) });
-	InputInterface::inputRegister("Move Panel Left", KeySet{ KeyEvent("A", Held), KeyEvent("Left", Held) });
-	InputInterface::inputRegister("Move Panel Down", KeySet{ KeyEvent("S", Held), KeyEvent("Down", Held) });
+	InputInterface::inputRegister("Spawn Insects", KeySet{ KeyEvent("Up", Pressed) });
+	InputInterface::inputRegister("Decrease Screaming Range", KeySet{ KeyEvent("Left", Pressed) });
+	InputInterface::inputRegister("Increase Screaming Range", KeySet{ KeyEvent("Right", Pressed) });
+
+	InputInterface::inputRegister("Move Panel Right", KeySet{ KeyEvent("D", Held) });
+	InputInterface::inputRegister("Move Panel Up", KeySet{ KeyEvent("W", Held) });
+	InputInterface::inputRegister("Move Panel Left", KeySet{ KeyEvent("A", Held) });
+	InputInterface::inputRegister("Move Panel Down", KeySet{ KeyEvent("S", Held) });
 }
 
 // game states are registered here
 void Engine::panelsRegister() {
 	using namespace PanelManager;
 	panelAdd(PanelTypes::GameView, PanelPtr(new PanelGameView(
-		PanelRect(0, 0, 1280, 720), // screen coordinates
-		PanelRect(0, 0, 1280, 720), // world coordinates
+		PanelRect(sf::Vector2f(0, 0), sf::Vector2f(1280, 720)), // screen coordinates
+		PanelRect(sf::Vector2f(0, 0), sf::Vector2f(1280, 720)), // world coordinates
 		sf::Color::Black
 	)));
 }

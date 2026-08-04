@@ -65,6 +65,17 @@ void GameStatePlay::gameStateUpdate() {
 		}
 	}
 
+	if (InputInterface::inputGetActive("Increase Screaming Range")) {
+		EntityComponents::ComponentScream::MAX_SCREAM_DIST += 4;
+	}
+	if (InputInterface::inputGetActive("Decrease Screaming Range")) {
+		EntityComponents::ComponentScream::MAX_SCREAM_DIST -= 4;
+	}
+	if (InputInterface::inputGetActive("Spawn Insects")) {
+		spawnInsects(100, 0.02f);
+	}
+
+
 	for (uint16_t x = 0; x < gameLevel->hearingGrid.size(); x++) {
 		for (uint16_t y = 0; y < gameLevel->hearingGrid[x].size(); y++) {
 			gameLevel->hearingGrid[x][y].clear();
@@ -87,18 +98,22 @@ void GameStatePlay::gameStateUpdate() {
 	LevelUpdater::levelsUpdate();
 }
 void GameStatePlay::gameStateFirstStart() {
-	GameLevel* gameLevel = GameLevelGrid::levelGet(0, 0, 0);
-
 	ObjectGrid::gridInitialize(CellDimensions(sf::Vector2i(4, 4)), 320, 180);
 
-	constexpr uint32_t TOTAL_INSECTS = 5000;
-	constexpr float RATIO_OF_SCOUTS = 0.05f;
+	constexpr uint32_t TOTAL_INSECTS = 100;
 
-	for (uint16_t i = 0; i < TOTAL_INSECTS * (1.f - RATIO_OF_SCOUTS); i++) {
+	spawnInsects(TOTAL_INSECTS, 0.02f);
+}
+ 
+void GameStatePlay::spawnInsects(uint32_t insectCount, float ratioOfScouts) {
+
+	GameLevel* gameLevel = GameLevelGrid::levelGet(0, 0, 0);
+
+	for (uint16_t i = 0; i < insectCount * (1.f - ratioOfScouts); i++) {
 		EntityId entityId = EntityManager::entityCreate(0, 0, 0, "Insect", EntityUpdateType::Frame);
 		gameLevel->insects.push_back(entityId);
 	}
-	for (uint16_t i = 0; i < TOTAL_INSECTS * RATIO_OF_SCOUTS; i++) {
+	for (uint16_t i = 0; i < insectCount * ratioOfScouts; i++) {
 		EntityId entityId = EntityManager::entityCreate(0, 0, 0, "Insect Scout", EntityUpdateType::Frame);
 		gameLevel->insects.push_back(entityId);
 	}

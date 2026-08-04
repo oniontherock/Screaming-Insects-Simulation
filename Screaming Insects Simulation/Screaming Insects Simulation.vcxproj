@@ -49,6 +49,9 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <EnableASAN>false</EnableASAN>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -76,23 +79,23 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)\SFMLInclude;C:\Users\dayna\Documents\Visual Studio Project\ACECS Engine\Engine Modules;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)\SFMLInclude;$(SolutionDir)\Screaming Insects Simulation\Engine Modules;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
       <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)\SFMLLib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">sfml-system-d.lib;sfml-window-d.lib;sfml-graphics-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">sfml-system-d.lib;sfml-window-d.lib;sfml-graphics-d.lib;sfml-audio-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Platform)'=='Win32'">
     <ClCompile>
       <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)\SFMLInclude;C:\Users\dayna\Documents\Visual Studio Project\ACECS Engine\Engine Modules;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)\SFMLInclude;$(SolutionDir)\Screaming Insects Simulation\Engine Modules;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)\SFMLLib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">sfml-system-d.lib;sfml-window-d.lib;sfml-graphics-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">sfml-system-d.lib;sfml-window-d.lib;sfml-graphics-d.lib;sfml-audio-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
@@ -102,7 +105,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)\SFMLInclude;C:\Users\dayna\Documents\Visual Studio Project\ACECS Engine\Engine Modules;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)\SFMLInclude;C:\Users\dayna\Documents\Visual Studio Project\ACECS Engine\Engine Modules;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)\SFMLInclude;$(SolutionDir)\Screaming Insects Simulation\Engine Modules;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -112,7 +115,7 @@
       <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)\SFMLLib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)\SFMLLib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">sfml-system.lib;sfml-window.lib;sfml-graphics.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">sfml-system.lib;sfml-window.lib;sfml-graphics.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">sfml-system.lib;sfml-window.lib;sfml-graphics.lib;sfml-audio.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -128,6 +131,54 @@
     <ClInclude Include="ACECS\GameLevel.hpp" />
     <ClInclude Include="ACECS\GameStates.hpp" />
     <ClInclude Include="ACECS\Panels.hpp" />
+    <ClInclude Include="Engine Modules\Audio.hpp" />
+    <ClInclude Include="Engine Modules\Audio\AudioStore.hpp" />
+    <ClInclude Include="Engine Modules\Audio\MusicSelector.hpp" />
+    <ClInclude Include="Engine Modules\Audio\SoundBufferStore.hpp" />
+    <ClInclude Include="Engine Modules\Audio\SoundHandler.hpp" />
+    <ClInclude Include="Engine Modules\Audio\SoundPlayer.hpp" />
+    <ClInclude Include="Engine Modules\Auxiliary\ConsoleHandler.hpp" />
+    <ClInclude Include="Engine Modules\Auxiliary\Cooldown.hpp" />
+    <ClInclude Include="Engine Modules\Auxiliary\FileStore.hpp" />
+    <ClInclude Include="Engine Modules\Auxiliary\Math.hpp" />
+    <ClInclude Include="Engine Modules\Auxiliary\NumberGenerator.hpp" />
+    <ClInclude Include="Engine Modules\Auxiliary\ObjectStore.hpp" />
+    <ClInclude Include="Engine Modules\Auxiliary\TimeHandler.hpp" />
+    <ClInclude Include="Engine Modules\Auxiliary\VectorMath.hpp" />
+    <ClInclude Include="Engine Modules\ECS.hpp" />
+    <ClInclude Include="Engine Modules\ECS\Components\Component.hpp" />
+    <ClInclude Include="Engine Modules\ECS\Components\ComponentIDs.hpp" />
+    <ClInclude Include="Engine Modules\ECS\Components\ComponentTemplateManager.hpp" />
+    <ClInclude Include="Engine Modules\ECS\Duplicatable\Duplicatable.hpp" />
+    <ClInclude Include="Engine Modules\ECS\Entities\Entity.hpp" />
+    <ClInclude Include="Engine Modules\ECS\Entities\EntityManager.hpp" />
+    <ClInclude Include="Engine Modules\ECS\Events\Event.hpp" />
+    <ClInclude Include="Engine Modules\ECS\Events\EventIDs.hpp" />
+    <ClInclude Include="Engine Modules\ECS\Events\EventPool.hpp" />
+    <ClInclude Include="Engine Modules\ECS\TypeDefinitions.hpp" />
+    <ClInclude Include="Engine Modules\ECS\TypeIDAllocator.hpp" />
+    <ClInclude Include="Engine Modules\GameState.hpp" />
+    <ClInclude Include="Engine Modules\GameState\GameStateHandler.hpp" />
+    <ClInclude Include="Engine Modules\Graphics.hpp" />
+    <ClInclude Include="Engine Modules\Graphics\Panel.hpp" />
+    <ClInclude Include="Engine Modules\Graphics\PanelManager.hpp" />
+    <ClInclude Include="Engine Modules\Graphics\Stores\GraphicsStore.hpp" />
+    <ClInclude Include="Engine Modules\Graphics\Stores\ImageStore.hpp" />
+    <ClInclude Include="Engine Modules\Graphics\Stores\TextureStore.hpp" />
+    <ClInclude Include="Engine Modules\Graphics\WindowHolder.hpp" />
+    <ClInclude Include="Engine Modules\Input.hpp" />
+    <ClInclude Include="Engine Modules\Input\Input Events\InputEventDefinitions.hpp" />
+    <ClInclude Include="Engine Modules\Input\Input Events\InputManager.hpp" />
+    <ClInclude Include="Engine Modules\Input\InputInterface.hpp" />
+    <ClInclude Include="Engine Modules\Input\Key Events\KeyEventDefinitions.hpp" />
+    <ClInclude Include="Engine Modules\Input\Key Events\KeyRecorder.hpp" />
+    <ClInclude Include="Engine Modules\Saving\SaveDirector.hpp" />
+    <ClInclude Include="Engine Modules\Saving\SaveHandler.hpp" />
+    <ClInclude Include="Engine Modules\World.hpp" />
+    <ClInclude Include="Engine Modules\World\Level.hpp" />
+    <ClInclude Include="Engine Modules\World\LevelGrid.hpp" />
+    <ClInclude Include="Engine Modules\World\LevelTypeDefinitions.hpp" />
+    <ClInclude Include="Engine Modules\World\LevelUpdater.hpp" />
     <ClInclude Include="Include\Common\NumberGenerator.hpp" />
     <ClInclude Include="Include\Common\RandomPools.hpp" />
     <ClInclude Include="Include\Common\TimeHandler.hpp" />
@@ -138,6 +189,37 @@
   <ItemGroup>
     <ClCompile Include="ACECS\GameStates.cpp" />
     <ClCompile Include="ACECS\Panels.cpp" />
+    <ClCompile Include="Engine Modules\Audio\AudioStore.cpp" />
+    <ClCompile Include="Engine Modules\Audio\MusicSelector.cpp" />
+    <ClCompile Include="Engine Modules\Audio\SoundBufferStore.cpp" />
+    <ClCompile Include="Engine Modules\Audio\SoundHandler.cpp" />
+    <ClCompile Include="Engine Modules\Audio\SoundPlayer.cpp" />
+    <ClCompile Include="Engine Modules\Auxiliary\ConsoleHandler.cpp" />
+    <ClCompile Include="Engine Modules\Auxiliary\Cooldown.cpp" />
+    <ClCompile Include="Engine Modules\Auxiliary\TimeHandler.cpp" />
+    <ClCompile Include="Engine Modules\ECS\Components\ComponentTemplateManager.cpp" />
+    <ClCompile Include="Engine Modules\ECS\Duplicatable\Duplicatable.cpp" />
+    <ClCompile Include="Engine Modules\ECS\Entities\Entity.cpp" />
+    <ClCompile Include="Engine Modules\ECS\Entities\EntityManager.cpp" />
+    <ClCompile Include="Engine Modules\ECS\Events\EventIDs.cpp" />
+    <ClCompile Include="Engine Modules\ECS\Events\EventPool.cpp" />
+    <ClCompile Include="Engine Modules\GameState\GameStateHandler.cpp" />
+    <ClCompile Include="Engine Modules\Graphics\Panel.cpp" />
+    <ClCompile Include="Engine Modules\Graphics\PanelManager.cpp" />
+    <ClCompile Include="Engine Modules\Graphics\Stores\GraphicsStore.cpp" />
+    <ClCompile Include="Engine Modules\Graphics\Stores\ImageStore.cpp" />
+    <ClCompile Include="Engine Modules\Graphics\Stores\TextureStore.cpp" />
+    <ClCompile Include="Engine Modules\Graphics\WindowHolder.cpp" />
+    <ClCompile Include="Engine Modules\Input\Input Events\InputEventDefinitions.cpp" />
+    <ClCompile Include="Engine Modules\Input\Input Events\InputManager.cpp" />
+    <ClCompile Include="Engine Modules\Input\InputInterface.cpp" />
+    <ClCompile Include="Engine Modules\Input\Key Events\KeyRecorder.cpp" />
+    <ClCompile Include="Engine Modules\Saving\SaveDirector.cpp" />
+    <ClCompile Include="Engine Modules\Saving\SaveHandler.cpp" />
+    <ClCompile Include="Engine Modules\World\Level.cpp" />
+    <ClCompile Include="Engine Modules\World\LevelGrid.cpp" />
+    <ClCompile Include="Engine Modules\World\LevelTypeDefinitions.cpp" />
+    <ClCompile Include="Engine Modules\World\LevelUpdater.cpp" />
     <ClCompile Include="Include\Common\TimeHandler.cpp" />
     <ClCompile Include="Include\Simulation\Object Grid\ObjectGrid.cpp" />
     <ClCompile Include="Source\main.cpp">
@@ -147,11 +229,6 @@
     <ClCompile Include="ACECS\ACECS.cpp" />
     <ClCompile Include="ACECS\ECSRegistry.cpp" />
     <ClCompile Include="ACECS\GameLevel.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\ACECS Engine\ACECS Engine.vcxproj">
-      <Project>{1ca11eb4-4748-4866-818b-17e720a3b6b8}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
